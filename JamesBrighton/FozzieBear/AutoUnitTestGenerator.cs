@@ -7,6 +7,9 @@ namespace JamesBrighton.FozzieBear;
 /// <summary>
 ///     This class represents auto unit test generator.
 /// </summary>
+#if DEBUG
+[AutoUnitTest]
+#endif
 public class AutoUnitTestGenerator
 {
 	/// <summary>
