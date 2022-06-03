@@ -2,11 +2,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "FozzieBear",
+            "name": "WockaWocka",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/bin/Debug/net6.0/FozzieBear.dll",
+            "program": "${workspaceFolder}/WockaWocka/bin/Debug/net6.0/WockaWocka.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",
