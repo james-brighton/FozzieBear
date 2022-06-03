@@ -3,12 +3,33 @@ using System.Reflection;
 namespace Mercury.Common.Function;
 
 /// <summary>
-/// This class contains general code (generation) functions.
+///     This class contains general code (generation) functions.
 /// </summary>
 public static class CodeFunction
 {
 	/// <summary>
-	/// Get the friendly name of a type.
+	///     C# names and their .NET names
+	/// </summary>
+	private static readonly Dictionary<string, string> CSharpNames = new()
+	{
+		{ "bool", "System.Boolean" },
+		{ "byte", "System.Byte" },
+		{ "sbyte", "System.SByte" },
+		{ "char", "System.Char" },
+		{ "decimal", "System.Decimal" },
+		{ "double", "System.Double" },
+		{ "float", "System.Single" },
+		{ "int", "System.Int32" },
+		{ "uint", "System.UInt32" },
+		{ "long", "System.Int64" },
+		{ "ulong", "System.UInt64" },
+		{ "object", "System.Object" },
+		{ "short", "System.Int16" },
+		{ "ushort", "System.UInt16" },
+		{ "string", "System.String" }
+	};
+	/// <summary>
+	///     Get the friendly name of a type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <returns>Friendly name or "" otherwise.</returns>
@@ -21,10 +42,7 @@ public static class CodeFunction
 		var typeParameters = type.GetGenericArguments();
 		if (!typeParameters.Any()) return GetCSharpName(result);
 		var backTick = result.IndexOf('`');
-		if (backTick > 0)
-		{
-			result = result.Remove(backTick);
-		}
+		if (backTick > 0) result = result.Remove(backTick);
 		result += "<";
 		for (var i = 0; i < typeParameters.Length; i++)
 		{
@@ -38,13 +56,16 @@ public static class CodeFunction
 	}
 
 	/// <summary>
-	/// Gets the dictionary with C# names and their corresponding .NET names.
+	///     Gets the dictionary with C# names and their corresponding .NET names.
 	/// </summary>
 	/// <returns>THe dictionary.</returns>
-	public static Dictionary<string, string> GetCSharpNames() => CSharpNames;
+	public static Dictionary<string, string> GetCSharpNames()
+	{
+		return CSharpNames;
+	}
 
 	/// <summary>
-	/// Check if two given types are equal
+	///     Check if two given types are equal
 	/// </summary>
 	/// <param name="t1">First type.</param>
 	/// <param name="t2">Second type.</param>
@@ -64,7 +85,7 @@ public static class CodeFunction
 	}
 
 	/// <summary>
-	/// Gets the name of the method.
+	///     Gets the name of the method.
 	/// </summary>
 	/// <param name="methodInfo">Method info.</param>
 	/// <returns>The method name or "" otherwise.</returns>
@@ -80,12 +101,12 @@ public static class CodeFunction
 
 
 	/// <summary>
-	/// Prepends the given name with the surrounding type's name.
+	///     Prepends the given name with the surrounding type's name.
 	/// </summary>
 	/// <param name="type">Type to get the surrounding type from.</param>
 	/// <param name="name">The current name.</param>
 	/// <returns>The prepended name.</returns>
-	static string PrependDeclaringType(MemberInfo type, string name)
+	private static string PrependDeclaringType(MemberInfo type, string name)
 	{
 		while (true)
 		{
@@ -97,35 +118,13 @@ public static class CodeFunction
 	}
 
 	/// <summary>
-	/// Gets the C# name of a given type name.
+	///     Gets the C# name of a given type name.
 	/// </summary>
 	/// <param name="typeName">Type name.</param>
 	/// <returns>The C# type name or the original .NET name if not found.</returns>
-	static string GetCSharpName(string typeName)
+	private static string GetCSharpName(string typeName)
 	{
 		var (key, value) = CSharpNames.FirstOrDefault(x => x.Value == typeName);
 		return value != typeName ? typeName : key;
 	}
-
-	/// <summary>
-	/// C# names and their .NET names
-	/// </summary>
-	static readonly Dictionary<string, string> CSharpNames = new()
-	{
-		{ "bool", "System.Boolean" },
-		{ "byte", "System.Byte" },
-		{ "sbyte", "System.SByte" },
-		{ "char", "System.Char" },
-		{ "decimal", "System.Decimal" },
-		{ "double", "System.Double" },
-		{ "float", "System.Single" },
-		{ "int", "System.Int32" },
-		{ "uint", "System.UInt32" },
-		{ "long", "System.Int64" },
-		{ "ulong", "System.UInt64" },
-		{ "object", "System.Object" },
-		{ "short", "System.Int16" },
-		{ "ushort", "System.UInt16" },
-		{ "string", "System.String" }
-	};
 }

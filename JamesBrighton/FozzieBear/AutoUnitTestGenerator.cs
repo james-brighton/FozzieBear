@@ -5,23 +5,23 @@ using System.Reflection;
 namespace JamesBrighton.FozzieBear;
 
 /// <summary>
-/// This class represents auto unit test generator.
+///     This class represents auto unit test generator.
 /// </summary>
 public class AutoUnitTestGenerator
 {
 	/// <summary>
-	/// The loaded assemblies.
+	///     The loaded assemblies.
 	/// </summary>
-	IList<Assembly> assemblies = new List<Assembly>();
+	private IList<Assembly> assemblies = new List<Assembly>();
 
 	/// <summary>
-	/// Gets or sets the input file.
+	///     Gets or sets the input file.
 	/// </summary>
 	/// <value>The input file.</value>
 	public string InputFile { get; set; } = "";
 
 	/// <summary>
-	/// Generates the tests.
+	///     Generates the tests.
 	/// </summary>
 	/// <returns>List with name and file content.</returns>
 	public IEnumerable<(string FileName, List<string> FileContent)> Execute()
@@ -32,7 +32,6 @@ public class AutoUnitTestGenerator
 		var names = new List<string>();
 		var files = new List<List<string>>();
 		var fullInputFile = Path.GetFullPath(InputFile);
-		var inputDirectory = Path.GetDirectoryName(fullInputFile) ?? ".\\";
 		assemblies = AutoUnitTestGeneratorHelper.GetAllAssemblies(Assembly.LoadFrom(fullInputFile));
 
 		foreach (var assembly in assemblies)
@@ -65,49 +64,45 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets the derived classes for a given type.
+	///     Gets the derived classes for a given type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <param name="skipType">Type to skip. Can be null (do not skip).</param>
 	/// <returns>The derived classes.</returns>
-	IReadOnlyList<Type> GetDerivedClasses(Type type, Type? skipType)
+	private IReadOnlyList<Type> GetDerivedClasses(Type type, Type? skipType)
 	{
 		var result = new List<Type>();
 
 		var realType = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
 		foreach (var assembly in assemblies)
+		foreach (var currentType in assembly.GetTypes())
 		{
-			foreach (var currentType in assembly.GetTypes())
-			{
-				if (!currentType.IsSubclassOf(realType) && (!realType.IsInterface || !AutoUnitTestGeneratorHelper.ImplementsInterface(currentType, realType))) continue;
-				var tt = AutoUnitTestGeneratorHelper.GetInitializableType(type, currentType);
-				if (tt?.IsGenericTypeDefinition == false && !tt.IsAbstract && tt.IsPublic &&
-				    !tt.GetCustomAttributes().Any(a => AutoUnitTestGeneratorHelper.GetFullName(a.GetType()).Equals("JamesBrighton.FozzieBear.SkipAttribute", StringComparison.Ordinal)) &&
-				    result.IndexOf(tt) < 0)
-				{
-					if (skipType == null || skipType != tt)
-						result.Add(tt);
-				}
-			}
+			if (!currentType.IsSubclassOf(realType) && (!realType.IsInterface || !AutoUnitTestGeneratorHelper.ImplementsInterface(currentType, realType))) continue;
+			var tt = AutoUnitTestGeneratorHelper.GetInitializableType(type, currentType);
+			if (tt?.IsGenericTypeDefinition == false && !tt.IsAbstract && tt.IsPublic &&
+			    !tt.GetCustomAttributes().Any(a => AutoUnitTestGeneratorHelper.GetFullName(a.GetType()).Equals("JamesBrighton.FozzieBear.SkipAttribute", StringComparison.Ordinal)) &&
+			    result.IndexOf(tt) < 0)
+				if (skipType == null || skipType != tt)
+					result.Add(tt);
 		}
 
 		return result;
 	}
 
 	/// <summary>
-	/// Generate tests for the given class' type.
+	///     Generate tests for the given class' type.
 	/// </summary>
 	/// <param name="classType">Class type to use.</param>
 	/// <param name="parameters">List of parameters the class type should use. Eg. list of template arguments.</param>
 	/// <param name="names">List of class names generated.</param>
 	/// <returns>List of generated files.</returns>
-	IEnumerable<List<string>> Generate(Type classType, IReadOnlyCollection<string> parameters,
+	private IEnumerable<List<string>> Generate(Type classType, IReadOnlyCollection<string> parameters,
 		ref List<string> names)
 	{
 		var classNames = new List<string>();
 		var result = new List<List<string>>();
 		var types = new List<Type>();
-		if (parameters?.Count > 0)
+		if (parameters.Count > 0)
 		{
 			ExpandGeneric(classType, parameters, types, classNames);
 		}
@@ -151,12 +146,12 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets the methods.
+	///     Gets the methods.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <param name="bindingAttr">The binding attributes used to control the search.</param>
 	/// <returns>The methods.</returns>
-	IEnumerable<MethodInfo> GetMethods(IReflect type, BindingFlags bindingAttr)
+	private IEnumerable<MethodInfo> GetMethods(IReflect type, BindingFlags bindingAttr)
 	{
 		var result = new List<MethodInfo>();
 
@@ -185,31 +180,31 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets the static set properties.
+	///     Gets the static set properties.
 	/// </summary>
 	/// <returns>The static set properties.</returns>
 	/// <param name="type">Type.</param>
-	IEnumerable<PropertyInfo> GetStaticSetProperties(IReflect type)
+	private IEnumerable<PropertyInfo> GetStaticSetProperties(IReflect type)
 	{
 		return type.GetProperties(BindingFlags.Public | BindingFlags.Static).Where(IsSetProperty).OrderBy(p => p.Name).ToList();
 	}
 
 	/// <summary>
-	/// Gets the instance set properties.
+	///     Gets the instance set properties.
 	/// </summary>
 	/// <returns>The set properties.</returns>
 	/// <param name="type">Type.</param>
-	IEnumerable<PropertyInfo> GetSetProperties(IReflect type)
+	private IEnumerable<PropertyInfo> GetSetProperties(IReflect type)
 	{
 		return type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(IsSetProperty).OrderBy(p => p.Name).ToList();
 	}
 
 	/// <summary>
-	/// Checks if the given property is a set property.
+	///     Checks if the given property is a set property.
 	/// </summary>
 	/// <param name="p">Property to check</param>
 	/// <returns>True if it is and false otherwise.</returns>
-	bool IsSetProperty(PropertyInfo p)
+	private bool IsSetProperty(PropertyInfo p)
 	{
 		if (p.DeclaringType == null) return false;
 		return !AutoUnitTestGeneratorHelper.StartsWith(p.DeclaringType.Namespace ?? "", "System", StringComparison.Ordinal) && !p.IsSpecialName &&
@@ -217,31 +212,31 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets the static get properties.
+	///     Gets the static get properties.
 	/// </summary>
 	/// <returns>The static get properties.</returns>
 	/// <param name="type">Type.</param>
-	IEnumerable<PropertyInfo> GetStaticGetProperties(IReflect type)
+	private IEnumerable<PropertyInfo> GetStaticGetProperties(IReflect type)
 	{
 		return type.GetProperties(BindingFlags.Public | BindingFlags.Static).Where(IsGetProperty).OrderBy(p => p.Name).ToList();
 	}
 
 	/// <summary>
-	/// Gets the instance get properties.
+	///     Gets the instance get properties.
 	/// </summary>
 	/// <returns>The get properties.</returns>
 	/// <param name="type">Type.</param>
-	IEnumerable<PropertyInfo> GetGetProperties(IReflect type)
+	private IEnumerable<PropertyInfo> GetGetProperties(IReflect type)
 	{
 		return type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(IsGetProperty).OrderBy(p => p.Name).ToList();
 	}
 
 	/// <summary>
-	/// Checks if the given property is a get property.
+	///     Checks if the given property is a get property.
 	/// </summary>
 	/// <param name="p">Property to check</param>
 	/// <returns>True if it is and false otherwise.</returns>
-	bool IsGetProperty(PropertyInfo p)
+	private bool IsGetProperty(PropertyInfo p)
 	{
 		if (p.DeclaringType == null) return false;
 		return !AutoUnitTestGeneratorHelper.StartsWith(p.DeclaringType.Namespace ?? "", "System", StringComparison.Ordinal) && !p.IsSpecialName &&
@@ -249,12 +244,12 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets all combinations for the given array type.
+	///     Gets all combinations for the given array type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <param name="isNullable">Type is nullable (true) or not (false)</param>
 	/// <returns>The combinations.</returns>
-	List<AutoUnitTestParameter> GetArrayParams(Type type, bool isNullable)
+	private List<AutoUnitTestParameter> GetArrayParams(Type type, bool isNullable)
 	{
 		var elementType = type.GetElementType();
 		if (elementType == null) return new List<AutoUnitTestParameter>();
@@ -283,13 +278,13 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Expands the given generic type.
+	///     Expands the given generic type.
 	/// </summary>
 	/// <param name="classType">Generic class type.</param>
 	/// <param name="parameters">Parameters for the generic class.</param>
 	/// <param name="types">Resulting types.</param>
 	/// <param name="names">Resulting names.</param>
-	void ExpandGeneric(Type classType, IEnumerable<string> parameters, ICollection<Type> types, ICollection<string> names)
+	private void ExpandGeneric(Type classType, IEnumerable<string> parameters, ICollection<Type> types, ICollection<string> names)
 	{
 		foreach (var param in parameters)
 		{
@@ -305,11 +300,11 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets the types of the given parameters for a to be determined generics class.
+	///     Gets the types of the given parameters for a to be determined generics class.
 	/// </summary>
 	/// <param name="parameters">Parameters.</param>
 	/// <returns>The parameter types.</returns>
-	List<Type> GetParameterTypes(string parameters)
+	private List<Type> GetParameterTypes(string parameters)
 	{
 		var parameterArray = parameters.Split(',');
 
@@ -317,31 +312,28 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Get the type for the given name.
+	///     Get the type for the given name.
 	/// </summary>
 	/// <param name="typeName">Name of the type.</param>
 	/// <returns>The type or null if not found.</returns>
-	Type GetType(string typeName)
+	private Type GetType(string typeName)
 	{
 		foreach (var assembly in assemblies)
-		{
-			foreach (var t in assembly.GetTypes())
-			{
-				if (AutoUnitTestGeneratorHelper.GetFullName(t) == typeName) return t;
-			}
-		}
+		foreach (var t in assembly.GetTypes())
+			if (AutoUnitTestGeneratorHelper.GetFullName(t) == typeName)
+				return t;
 		return Type.GetType(typeName)!;
 	}
 
 	/// <summary>
-	/// Generates the C# methods for the given class and its attached methods.
+	///     Generates the C# methods for the given class and its attached methods.
 	/// </summary>
 	/// <param name="type">Class type.</param>
 	/// <param name="methods">Methods.</param>
 	/// <param name="needsInstance">True if an instance variable is required and false otherwise.</param>
 	/// <param name="counter">Counter for the method name generation.</param>
 	/// <returns>The C# code.</returns>
-	IEnumerable<string> GenerateMethods(Type type, IEnumerable<MethodInfo> methods, bool needsInstance,
+	private IEnumerable<string> GenerateMethods(Type type, IEnumerable<MethodInfo> methods, bool needsInstance,
 		ref Dictionary<string, int> counter)
 	{
 		if (!needsInstance) return GenerateMethods(type, methods, ref counter, new List<string>(), "", needsInstance);
@@ -359,7 +351,7 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Generates the C# methods for the given class and its attached methods.
+	///     Generates the C# methods for the given class and its attached methods.
 	/// </summary>
 	/// <param name="type">Class type.</param>
 	/// <param name="methods">Methods.</param>
@@ -368,7 +360,7 @@ public class AutoUnitTestGenerator
 	/// <param name="constructorParamList">String with the list of the constructor's parameter list</param>
 	/// <param name="needsInstance">True if an instance variable is required and false otherwise.</param>
 	/// <returns>The C# code.</returns>
-	IEnumerable<string> GenerateMethods(Type type, IEnumerable<MethodInfo> methods,
+	private IEnumerable<string> GenerateMethods(Type type, IEnumerable<MethodInfo> methods,
 		ref Dictionary<string, int> counter, IReadOnlyCollection<string> constructorParamDeclarations,
 		string constructorParamList, bool needsInstance)
 	{
@@ -413,33 +405,29 @@ public class AutoUnitTestGenerator
 
 				method.Add(
 					$"{jump}\t\t\t{methodResult}{(needsInstance ? "instance" : fullName)}.{m.Name}{genericArgNames}({methodParamList});");
-				#if DEBUG
+#if DEBUG
 				if (m.ReturnType != typeof(void) && string.IsNullOrEmpty(returns))
 				{
-					if (m.ReturnType.IsValueType && m.ReturnType != typeof(bool))
-						method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + result.ToString());");
-					else if (!m.ReturnType.IsValueType)
-						method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + (result?.ToString() ?? \"null\"));");
+					switch (m.ReturnType.IsValueType)
+					{
+						case true when m.ReturnType != typeof(bool):
+							method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + result.ToString());");
+							break;
+						case false:
+							method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + (result?.ToString() ?? \"null\"));");
+							break;
+					}
 				}
-				#endif
-				if (!string.IsNullOrEmpty(returns))
-				{
-					method.Add($"{jump}\t\t\tAssert.IsTrue({returns});");
-				}
+#endif
+				if (!string.IsNullOrEmpty(returns)) method.Add($"{jump}\t\t\tAssert.IsTrue({returns});");
 				if (exceptionTypes.Any())
 				{
 					method.Add("\t\t\t}");
 					method.AddRange(exceptionTypes.Select(e => $"\t\t\tcatch ({AutoUnitTestGeneratorHelper.GetFullName(e)}) {{}}"));
 				}
 
-				if (m.ReturnType != typeof(void) && AutoUnitTestGeneratorHelper.ImplementsInterface(m.ReturnType, typeof(IDisposable)))
-				{
-					method.Add("\t\t\tresult?.Dispose();");
-				}
-				if (needsInstance && isDisposable)
-				{
-					method.Add("\t\t\tinstance?.Dispose();");
-				}
+				if (m.ReturnType != typeof(void) && AutoUnitTestGeneratorHelper.ImplementsInterface(m.ReturnType, typeof(IDisposable))) method.Add("\t\t\tresult?.Dispose();");
+				if (needsInstance && isDisposable) method.Add("\t\t\tinstance?.Dispose();");
 				method.Add("\t\t}");
 				method.Add("");
 				result.AddRange(method);
@@ -450,14 +438,14 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Generates the C# get-properties for the given class and its attached properties.
+	///     Generates the C# get-properties for the given class and its attached properties.
 	/// </summary>
 	/// <param name="type">Class type.</param>
 	/// <param name="properties">Properties.</param>
 	/// <param name="needsInstance">True if an instance variable is required and false otherwise.</param>
 	/// <param name="counter">Counter for the method name generation.</param>
 	/// <returns>The C# code.</returns>
-	IEnumerable<string> GenerateGetProperties(Type type, IEnumerable<PropertyInfo> properties, bool needsInstance,
+	private IEnumerable<string> GenerateGetProperties(Type type, IEnumerable<PropertyInfo> properties, bool needsInstance,
 		ref Dictionary<string, int> counter)
 	{
 		if (!needsInstance) return GenerateGetProperties(type, properties, ref counter, new List<string>(), "", needsInstance);
@@ -474,7 +462,7 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Generates the C# get-properties for the given class and its attached properties.
+	///     Generates the C# get-properties for the given class and its attached properties.
 	/// </summary>
 	/// <param name="type">Class type.</param>
 	/// <param name="properties">Properties.</param>
@@ -483,7 +471,7 @@ public class AutoUnitTestGenerator
 	/// <param name="constructorParamList">String with the list of the constructor's parameter list</param>
 	/// <param name="needsInstance">True if an instance variable is required and false otherwise.</param>
 	/// <returns>The C# code.</returns>
-	IEnumerable<string> GenerateGetProperties(Type type, IEnumerable<PropertyInfo> properties,
+	private IEnumerable<string> GenerateGetProperties(Type type, IEnumerable<PropertyInfo> properties,
 		ref Dictionary<string, int> counter, IReadOnlyCollection<string> constructorParamDeclarations,
 		string constructorParamList, bool needsInstance)
 	{
@@ -499,14 +487,8 @@ public class AutoUnitTestGenerator
 			var method = AutoUnitTestGeneratorHelper.GenerateMethodDeclaration(prop, ref counter, needsInstance, fullName, constructorParamDeclarations, constructorParamList);
 
 			method.Add($"\t\t\t{propResult}{(needsInstance ? "instance" : fullName)}{propertySet.Value};");
-			if (prop.PropertyType != typeof(void) && AutoUnitTestGeneratorHelper.ImplementsInterface(prop.PropertyType, typeof(IDisposable)))
-			{
-				method.Add("\t\t\tpropResult?.Dispose();");
-			}
-			if (needsInstance && isDisposable)
-			{
-				method.Add("\t\t\tinstance?.Dispose();");
-			}
+			if (prop.PropertyType != typeof(void) && AutoUnitTestGeneratorHelper.ImplementsInterface(prop.PropertyType, typeof(IDisposable))) method.Add("\t\t\tpropResult?.Dispose();");
+			if (needsInstance && isDisposable) method.Add("\t\t\tinstance?.Dispose();");
 			method.Add("\t\t}");
 			method.Add("");
 			result.AddRange(method);
@@ -516,14 +498,14 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Generates the C# set-properties for the given class and its attached properties.
+	///     Generates the C# set-properties for the given class and its attached properties.
 	/// </summary>
 	/// <param name="type">Class type.</param>
 	/// <param name="properties">Properties.</param>
 	/// <param name="needsInstance">True if an instance variable is required and false otherwise.</param>
 	/// <param name="counter">Counter for the method name generation.</param>
 	/// <returns>The C# code.</returns>
-	IEnumerable<string> GenerateSetProperties(Type type, IEnumerable<PropertyInfo> properties, bool needsInstance,
+	private IEnumerable<string> GenerateSetProperties(Type type, IEnumerable<PropertyInfo> properties, bool needsInstance,
 		ref Dictionary<string, int> counter)
 	{
 		if (!needsInstance) return GenerateSetProperties(type, properties, ref counter, new List<string>(), "", needsInstance);
@@ -540,7 +522,7 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Generates the C# set-properties for the given class and its attached properties.
+	///     Generates the C# set-properties for the given class and its attached properties.
 	/// </summary>
 	/// <param name="type">Class type.</param>
 	/// <param name="properties">Properties.</param>
@@ -549,7 +531,7 @@ public class AutoUnitTestGenerator
 	/// <param name="constructorParamList">String with the list of the constructor's parameter list</param>
 	/// <param name="needsInstance">True if an instance variable is required and false otherwise.</param>
 	/// <returns>The C# code.</returns>
-	IEnumerable<string> GenerateSetProperties(Type type, IEnumerable<PropertyInfo> properties,
+	private IEnumerable<string> GenerateSetProperties(Type type, IEnumerable<PropertyInfo> properties,
 		ref Dictionary<string, int> counter, IReadOnlyCollection<string> constructorParamDeclarations,
 		string constructorParamList, bool needsInstance)
 	{
@@ -584,10 +566,7 @@ public class AutoUnitTestGenerator
 					method.Add("\t\t\t}");
 				}
 
-				if (needsInstance && isDisposable)
-				{
-					method.Add("\t\t\tinstance?.Dispose();");
-				}
+				if (needsInstance && isDisposable) method.Add("\t\t\tinstance?.Dispose();");
 				method.Add("\t\t}");
 				method.Add("");
 				result.AddRange(method);
@@ -598,11 +577,11 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets all combinations for the given struct type.
+	///     Gets all combinations for the given struct type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <returns>The combinations.</returns>
-	List<AutoUnitTestParameter> GetStructParams(Type type)
+	private List<AutoUnitTestParameter> GetStructParams(Type type)
 	{
 		var fullName = AutoUnitTestGeneratorHelper.GetFullName(type);
 		var result = new List<AutoUnitTestParameter>
@@ -613,20 +592,20 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets a mock implementation for the given interface type.
+	///     Gets a mock implementation for the given interface type.
 	/// </summary>
 	/// <param name="enclosingConstructor">Type for calls this method in its constructor. Null means 'doesn't matter'.</param>
 	/// <param name="type">Type.</param>
 	/// <param name="isNullable">Type is nullable (true) or not (false)</param>
 	/// <returns>The combinations.</returns>
-	List<AutoUnitTestParameter> GetInterfaceParams(Type? enclosingConstructor, Type type, bool isNullable)
+	private List<AutoUnitTestParameter> GetInterfaceParams(Type? enclosingConstructor, Type type, bool isNullable)
 	{
 		var fullName = AutoUnitTestGeneratorHelper.GetFullName(type);
 		var result = new List<AutoUnitTestParameter>();
 
 		if (isNullable)
 			result.Add(new AutoUnitTestParameter(fullName, $"({fullName})null"));
-		var list = new List<AutoUnitTestParameter>(); 
+		var list = new List<AutoUnitTestParameter>();
 		list.AddRange(from @class in GetDerivedClasses(type, enclosingConstructor)
 			select GetConstructor(@class)
 			into c
@@ -663,12 +642,12 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets all combinations for the given class type.
+	///     Gets all combinations for the given class type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <param name="isNullable">Type is nullable (true) or not (false)</param>
 	/// <returns>The combinations.</returns>
-	List<AutoUnitTestParameter> GetClassParams(Type type, bool isNullable)
+	private List<AutoUnitTestParameter> GetClassParams(Type type, bool isNullable)
 	{
 		var fullName = AutoUnitTestGeneratorHelper.GetFullName(type);
 
@@ -683,11 +662,11 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets the constructor as a C# code declaration for the given type.
+	///     Gets the constructor as a C# code declaration for the given type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <returns>The constructor or an empty string if not found.</returns>
-	string GetConstructor(Type type)
+	private string GetConstructor(Type type)
 	{
 		var fullName = AutoUnitTestGeneratorHelper.GetFullName(type);
 
@@ -732,11 +711,11 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Get all the indexer combinations for a given set property
+	///     Get all the indexer combinations for a given set property
 	/// </summary>
 	/// <param name="property">Property.</param>
 	/// <returns>The combinations.</returns>
-	IEnumerable<AutoUnitTestParameter> GetAllIndexCombinations(PropertyInfo property)
+	private IEnumerable<AutoUnitTestParameter> GetAllIndexCombinations(PropertyInfo property)
 	{
 		if (property.SetMethod == null) return new List<AutoUnitTestParameter>();
 		if (property.SetMethod.GetParameters().Length <= 1)
@@ -752,11 +731,11 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets all the combinations for a given get property
+	///     Gets all the combinations for a given get property
 	/// </summary>
 	/// <param name="property">Property.</param>
 	/// <returns>The combinations.</returns>
-	IEnumerable<AutoUnitTestParameter> GetAllCombinations(PropertyInfo property)
+	private IEnumerable<AutoUnitTestParameter> GetAllCombinations(PropertyInfo property)
 	{
 		if (property.GetMethod == null) return new List<AutoUnitTestParameter>();
 		if (!property.GetMethod.GetParameters().Any())
@@ -772,11 +751,11 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets all possible combinations of a given parameter list.
+	///     Gets all possible combinations of a given parameter list.
 	/// </summary>
 	/// <param name="parameters">Parameters.</param>
 	/// <returns>The combinations.</returns>
-	IEnumerable<IEnumerable<AutoUnitTestParameter>> GetAllCombinations(IEnumerable<ParameterInfo> parameters)
+	private IEnumerable<IEnumerable<AutoUnitTestParameter>> GetAllCombinations(IEnumerable<ParameterInfo> parameters)
 	{
 		var cases = new List<IEnumerable<AutoUnitTestParameter>>();
 		foreach (var parameter in parameters)
@@ -788,33 +767,25 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets parameter variations for a given parameter
+	///     Gets parameter variations for a given parameter
 	/// </summary>
 	/// <param name="enclosingConstructor">Type for calls this method in its constructor. Null means 'doesn't matter'.</param>
 	/// <param name="param">Given parameter.</param>
 	/// <returns>All variations.</returns>
-	List<AutoUnitTestParameter> GetParameterVariations(Type? enclosingConstructor, ParameterInfo param)
+	private List<AutoUnitTestParameter> GetParameterVariations(Type? enclosingConstructor, ParameterInfo param)
 	{
 		var isNullable = ParameterInfoFunction.IsNullable(param);
 		var typeVariations = GetTypeVariations(enclosingConstructor, param.ParameterType, isNullable);
 		foreach (var p in typeVariations)
-		{
 			if (param.IsOut)
-			{
 				p.Direction = "out";
-			}
 			else if (param.ParameterType.IsByRef)
-			{
 				p.Direction = "ref";
-			}
 			else
-			{
 				p.Direction = "";
-			}
-		}
 		if (!param.IsOut)
 			return typeVariations;
-		
+
 		var result = new List<AutoUnitTestParameter>();
 		if (typeVariations.Count > 0)
 			result.Add(typeVariations[0]);
@@ -822,13 +793,13 @@ public class AutoUnitTestGenerator
 	}
 
 	/// <summary>
-	/// Gets parameter variations for a given type
+	///     Gets parameter variations for a given type
 	/// </summary>
 	/// <param name="enclosingConstructor">Type for calls this method in its constructor. Null means 'doesn't matter'.</param>
 	/// <param name="type">Given type.</param>
 	/// <param name="isNullable">Type is nullable (true) or not (false)</param>
 	/// <returns>All variations.</returns>
-	List<AutoUnitTestParameter> GetTypeVariations(Type? enclosingConstructor, Type type, bool isNullable = true)
+	private List<AutoUnitTestParameter> GetTypeVariations(Type? enclosingConstructor, Type type, bool isNullable = true)
 	{
 		var coreType = AutoUnitTestGeneratorHelper.GetCoreType(type);
 		List<AutoUnitTestParameter> result = new();
@@ -853,7 +824,7 @@ public class AutoUnitTestGenerator
 		else if (type.IsInterface || type.IsAbstract)
 			result = GetInterfaceParams(enclosingConstructor, type, isNullable);
 		else if (type.IsClass && !type.IsAbstract) result = GetClassParams(type, isNullable);
-			
+
 		return result;
 	}
 }

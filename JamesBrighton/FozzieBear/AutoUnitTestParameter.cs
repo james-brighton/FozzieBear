@@ -1,7 +1,7 @@
 namespace JamesBrighton.FozzieBear;
 
 /// <summary>
-/// AutoUnitTest parameter class. Used internally as a helper class for the <see cref="AutoUnitTestGenerator" /> class.
+///     AutoUnitTest parameter class. Used internally as a helper class for the <see cref="AutoUnitTestGenerator" /> class.
 /// </summary>
 internal class AutoUnitTestParameter
 {

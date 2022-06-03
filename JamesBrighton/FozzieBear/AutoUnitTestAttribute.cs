@@ -2,94 +2,124 @@ namespace JamesBrighton.FozzieBear;
 
 /// <summary>Attribute for specifying a class can automatically be unit tested.</summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class AutoUnitTestAttribute : System.Attribute
+public class AutoUnitTestAttribute : Attribute
 {
 	/// <summary>
-	/// Initializes a new instance of the <see cref="AutoUnitTestAttribute" /> class.
+	///     The parameters.
 	/// </summary>
-	public AutoUnitTestAttribute() => parameters = new List<string>();
+	private readonly List<string> parameters;
+	/// <summary>
+	///     Initializes a new instance of the <see cref="AutoUnitTestAttribute" /> class.
+	/// </summary>
+	public AutoUnitTestAttribute()
+	{
+		parameters = new List<string>();
+	}
 
 	/// <summary>
-	/// Initializes a new instance of the <see cref="AutoUnitTestAttribute" /> class.
+	///     Initializes a new instance of the <see cref="AutoUnitTestAttribute" /> class.
 	/// </summary>
 	/// <param name="parameters">List of parameters.</param>
-	public AutoUnitTestAttribute(params string[] parameters) => this.parameters = new List<string>(parameters);
+	public AutoUnitTestAttribute(params string[] parameters)
+	{
+		this.parameters = new List<string>(parameters);
+	}
 
 	/// <summary>
-	/// Gets the parameters.
+	///     Gets the parameters.
 	/// </summary>
 	/// <returns>The parameters.</returns>
-	public List<string> GetParameters() => parameters;
-
-	/// <summary>
-	/// The parameters.
-	/// </summary>
-	readonly List<string> parameters;
+	public List<string> GetParameters()
+	{
+		return parameters;
+	}
 }
 
 /// <summary>Attribute for specifying which exception a method may throw.</summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
-public class ThrowsExceptionAttribute : System.Attribute
+public class ThrowsExceptionAttribute : Attribute
 {
 	/// <summary>
-	/// Initializes a new instance of the <see cref="ThrowsExceptionAttribute" /> class. It adds the <see cref="Exception" /> class to the list of exceptions.
+	///     The exceptions.
 	/// </summary>
-	public ThrowsExceptionAttribute() => exceptions = new List<string> { "System.Exception" };
+	private readonly List<string> exceptions;
+	/// <summary>
+	///     Initializes a new instance of the <see cref="ThrowsExceptionAttribute" /> class. It adds the
+	///     <see cref="Exception" /> class to the list of exceptions.
+	/// </summary>
+	public ThrowsExceptionAttribute()
+	{
+		exceptions = new List<string> { "System.Exception" };
+	}
 
 	/// <summary>
-	/// Initializes a new instance of the <see cref="ThrowsExceptionAttribute" /> class.
+	///     Initializes a new instance of the <see cref="ThrowsExceptionAttribute" /> class.
 	/// </summary>
 	/// <param name="exceptions">List of parameters.</param>
-	public ThrowsExceptionAttribute(params string[] exceptions) => this.exceptions = new List<string>(exceptions);
+	public ThrowsExceptionAttribute(params string[] exceptions)
+	{
+		this.exceptions = new List<string>(exceptions);
+	}
 
 	/// <summary>
-	/// Gets the types of the exceptions.
+	///     Gets the types of the exceptions.
 	/// </summary>
 	/// <returns>The exceptions.</returns>
-	public List<string> GetExceptions() => exceptions;
-
-	/// <summary>
-	/// The exceptions.
-	/// </summary>
-	readonly List<string> exceptions;
+	public List<string> GetExceptions()
+	{
+		return exceptions;
+	}
 }
 
 /// <summary>Attribute for specifying which returns a method may have.</summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
-public class ReturnAttribute : System.Attribute
+public class ReturnAttribute : Attribute
 {
 	/// <summary>
-	/// Initializes a new instance of the <see cref="ReturnAttribute" /> class.
+	///     The returns.
 	/// </summary>
-	public ReturnAttribute() => returns = new List<string> ();
+	private readonly List<string> returns;
+	/// <summary>
+	///     Initializes a new instance of the <see cref="ReturnAttribute" /> class.
+	/// </summary>
+	public ReturnAttribute()
+	{
+		returns = new List<string>();
+	}
 
 	/// <summary>
-	/// Initializes a new instance of the <see cref="ReturnAttribute" /> class.
+	///     Initializes a new instance of the <see cref="ReturnAttribute" /> class.
 	/// </summary>
 	/// <param name="returns">List of return statements.</param>
-	public ReturnAttribute(params string[] returns) => this.returns = new List<string>(returns);
+	public ReturnAttribute(params string[] returns)
+	{
+		this.returns = new List<string>(returns);
+	}
 
 	/// <summary>
-	/// Gets the types of the exceptions.
+	///     Gets the types of the exceptions.
 	/// </summary>
 	/// <returns>The exceptions.</returns>
 	public IEnumerable<string> GetReturns()
 	{
 		return returns;
 	}
-
-	/// <summary>
-	/// The returns.
-	/// </summary>
-	readonly List<string> returns;
 }
 
 /// <summary>Attribute for specifying which returns a method may have. This attribute must be set a class level</summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-public class ReturnForAttribute : System.Attribute
+public class ReturnForAttribute : Attribute
 {
 	/// <summary>
-	/// Initializes a new instance of the <see cref="ReturnForAttribute" /> class.
+	///     The class name
+	/// </summary>
+	private readonly string methodName;
+	/// <summary>
+	///     The returns.
+	/// </summary>
+	private readonly List<string> returns;
+	/// <summary>
+	///     Initializes a new instance of the <see cref="ReturnForAttribute" /> class.
 	/// </summary>
 	/// <param name="methodName">Name of the method</param>
 	public ReturnForAttribute(string methodName)
@@ -99,7 +129,7 @@ public class ReturnForAttribute : System.Attribute
 	}
 
 	/// <summary>
-	/// Initializes a new instance of the <see cref="ReturnForAttribute" /> class.
+	///     Initializes a new instance of the <see cref="ReturnForAttribute" /> class.
 	/// </summary>
 	/// <param name="methodName">Name of the method</param>
 	/// <param name="returns">List of return statements.</param>
@@ -110,7 +140,7 @@ public class ReturnForAttribute : System.Attribute
 	}
 
 	/// <summary>
-	/// Gets the method name
+	///     Gets the method name
 	/// </summary>
 	/// <returns>The method name</returns>
 	public string GetMethodName()
@@ -119,50 +149,52 @@ public class ReturnForAttribute : System.Attribute
 	}
 
 	/// <summary>
-	/// Gets the types of the exceptions.
+	///     Gets the types of the exceptions.
 	/// </summary>
 	/// <returns>The exceptions.</returns>
-	public IEnumerable<string> GetReturns() => returns;
-
-	/// <summary>
-	/// The class name
-	/// </summary>
-	readonly string methodName;
-	/// <summary>
-	/// The returns.
-	/// </summary>
-	readonly List<string> returns;
+	public IEnumerable<string> GetReturns()
+	{
+		return returns;
+	}
 }
 
 /// <summary>Attribute for marking the class, method or property as not applicable for an automatic unit test.</summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property)]
-public class SkipAttribute : System.Attribute
+public class SkipAttribute : Attribute
 {
 }
 
 /// <summary>Attribute for marking the method or property with a given set of parameters.</summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
-public class InvokeAttribute : System.Attribute
+public class InvokeAttribute : Attribute
 {
 	/// <summary>
-	/// Initializes a new instance of the <see cref="InvokeAttribute" /> class.
+	///     The parameters.
 	/// </summary>
-	public InvokeAttribute() => parameters = new List<string>();
+	private readonly List<string> parameters;
+	/// <summary>
+	///     Initializes a new instance of the <see cref="InvokeAttribute" /> class.
+	/// </summary>
+	public InvokeAttribute()
+	{
+		parameters = new List<string>();
+	}
 
 	/// <summary>
-	/// Initializes a new instance of the <see cref="InvokeAttribute" /> class.
+	///     Initializes a new instance of the <see cref="InvokeAttribute" /> class.
 	/// </summary>
 	/// <param name="parameters">List of parameters.</param>
-	public InvokeAttribute(params string[] parameters) => this.parameters = new List<string>(parameters);
+	public InvokeAttribute(params string[] parameters)
+	{
+		this.parameters = new List<string>(parameters);
+	}
 
 	/// <summary>
-	/// Gets the parameters.
+	///     Gets the parameters.
 	/// </summary>
 	/// <returns>The parameters.</returns>
-	public List<string> GetParameters() => parameters;
-
-	/// <summary>
-	/// The parameters.
-	/// </summary>
-	readonly List<string> parameters;
+	public List<string> GetParameters()
+	{
+		return parameters;
+	}
 }

@@ -7,17 +7,98 @@ using Mercury.Common.Function;
 namespace JamesBrighton.FozzieBear;
 
 /// <summary>
-/// This class creates implementations of interfaces, allowing dynamic behaviour to be specified by its method handler delegate.
+///     This class creates implementations of interfaces, allowing dynamic behaviour to be specified by its method handler
+///     delegate.
 /// </summary>
 public class InterfaceProxy
 {
 	/// <summary>
-	/// This delegate represents the method handler. The method name, the arguments of the method (as an object array) and the result (as an object) are the arguments. Return true if the method was handled and false otherwise. False means the default value of the given return type is used.
+	///     This delegate represents the method handler. The method name, the arguments of the method (as an object array) and
+	///     the result (as an object) are the arguments. Return true if the method was handled and false otherwise. False means
+	///     the default value of the given return type is used.
 	/// </summary>
 	public delegate bool MethodHandler(string methodName, object[] args, ref object result);
 
 	/// <summary>
-	/// Create the implementation of the specified interface type and providing the optional method handler.
+	///     The try invoke member info.
+	/// </summary>
+	private static readonly MethodInfo TryInvokeMemberInfo;
+	/// <summary>
+	///     The type cache.
+	/// </summary>
+	private static readonly Dictionary<string, Type> Cache;
+	/// <summary>
+	///     The module builder.
+	/// </summary>
+	private static readonly ModuleBuilder ModuleBuilder;
+
+	/// <summary>
+	///     The store map for the primitive types.
+	/// </summary>
+	private static readonly Dictionary<Type, OpCode> StoreMap = new()
+	{
+		[typeof(bool)] = OpCodes.Stind_I1,
+		[typeof(sbyte)] = OpCodes.Stind_I1,
+		[typeof(byte)] = OpCodes.Stind_I1,
+
+		[typeof(ushort)] = OpCodes.Stind_I2,
+		[typeof(short)] = OpCodes.Stind_I2,
+
+		[typeof(uint)] = OpCodes.Stind_I4,
+		[typeof(int)] = OpCodes.Stind_I4,
+
+		[typeof(IntPtr)] = Environment.Is64BitProcess ? OpCodes.Stind_I8 : OpCodes.Stind_I4,
+		[typeof(ulong)] = OpCodes.Stind_I8,
+		[typeof(long)] = OpCodes.Stind_I8,
+
+		[typeof(float)] = OpCodes.Stind_R4,
+		[typeof(double)] = OpCodes.Stind_R8
+	};
+
+	/// <summary>
+	///     The load map for the primitive types.
+	/// </summary>
+	private static readonly Dictionary<Type, OpCode> LoadMap = new()
+	{
+		[typeof(bool)] = OpCodes.Ldind_I1,
+		[typeof(sbyte)] = OpCodes.Ldind_I1,
+		[typeof(byte)] = OpCodes.Ldind_I1,
+
+		[typeof(ushort)] = OpCodes.Ldind_I2,
+		[typeof(short)] = OpCodes.Ldind_I2,
+
+		[typeof(uint)] = OpCodes.Ldind_I4,
+		[typeof(int)] = OpCodes.Ldind_I4,
+
+		[typeof(IntPtr)] = Environment.Is64BitProcess ? OpCodes.Ldind_I8 : OpCodes.Ldind_I4,
+		[typeof(ulong)] = OpCodes.Ldind_I8,
+		[typeof(long)] = OpCodes.Ldind_I8,
+
+		[typeof(float)] = OpCodes.Ldind_R4,
+		[typeof(double)] = OpCodes.Ldind_R8
+	};
+
+	/// <summary>
+	///     The method handler.
+	/// </summary>
+	private MethodHandler methodHandler;
+
+	/// <summary>
+	///     Initializes the <see cref="JamesBrighton.FozzieBear.InterfaceProxy" /> class.
+	/// </summary>
+	static InterfaceProxy()
+	{
+		var typeFromHandle = typeof(InterfaceProxy);
+		TryInvokeMemberInfo = Array.Find(typeFromHandle.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic), x => x.Name.Equals("TryInvokeMember", StringComparison.Ordinal));
+		var guid = Guid.NewGuid().ToString();
+		var assemblyName = new AssemblyName($"{typeFromHandle.Namespace}.{typeFromHandle.Name}_{guid}");
+		var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+		ModuleBuilder = assemblyBuilder.DefineDynamicModule(assemblyName.Name + ".dll");
+		Cache = new Dictionary<string, Type>();
+	}
+
+	/// <summary>
+	///     Create the implementation of the specified interface type and providing the optional method handler.
 	/// </summary>
 	/// <typeparam name="TInterface">Type of the interface to construct</typeparam>
 	/// <param name="methodHandler">Method handler.</param>
@@ -29,7 +110,7 @@ public class InterfaceProxy
 	}
 
 	/// <summary>
-	/// Create the implementation of the specified interface type and providing the optional method handler.
+	///     Create the implementation of the specified interface type and providing the optional method handler.
 	/// </summary>
 	/// <param name="interfaceType">Interface type.</param>
 	/// <param name="methodHandler">Method handler.</param>
@@ -45,7 +126,7 @@ public class InterfaceProxy
 	}
 
 	/// <summary>
-	/// Tries to invoke the member. This is an internal method used to trigger the method handler.
+	///     Tries to invoke the member. This is an internal method used to trigger the method handler.
 	/// </summary>
 	/// <param name="methodName">Method name.</param>
 	/// <param name="args">Arguments.</param>
@@ -58,31 +139,17 @@ public class InterfaceProxy
 	}
 
 	/// <summary>
-	/// Initializes the <see cref="JamesBrighton.FozzieBear.InterfaceProxy" /> class.
-	/// </summary>
-	static InterfaceProxy()
-	{
-		var typeFromHandle = typeof(InterfaceProxy);
-		tryInvokeMemberInfo = Array.Find(typeFromHandle.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic), x => x.Name.Equals("TryInvokeMember", StringComparison.Ordinal));
-		var guid = Guid.NewGuid().ToString();
-		var assemblyName = new AssemblyName($"{typeFromHandle.Namespace}.{typeFromHandle.Name}_{guid}");
-		var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
-		moduleBuilder = assemblyBuilder.DefineDynamicModule(assemblyName.Name + ".dll");
-		cache = new Dictionary<string, Type>();
-	}
-
-	/// <summary>
-	/// Creates the implementation type for the given interface type and the base class.
+	///     Creates the implementation type for the given interface type and the base class.
 	/// </summary>
 	/// <param name="interfaceType">Interface type.</param>
 	/// <param name="baseType">Base type to use. The implementation will use this as its parent</param>
 	/// <returns>The type or null otherwise.</returns>
-	static Type CreateType(Type interfaceType, Type baseType)
+	private static Type CreateType(Type interfaceType, Type baseType)
 	{
 		var name = $"{nameof(InterfaceProxy)}+{GetFullName(interfaceType)}";
-		if (cache.TryGetValue(name, out var type))
+		if (Cache.TryGetValue(name, out var type))
 			return type;
-		var typeBuilder = moduleBuilder.DefineType(name, TypeAttributes.NotPublic);
+		var typeBuilder = ModuleBuilder.DefineType(name, TypeAttributes.NotPublic);
 		typeBuilder.SetParent(baseType);
 		typeBuilder.AddInterfaceImplementation(interfaceType);
 		CreateConstructorBaseCalls(baseType, typeBuilder);
@@ -91,29 +158,29 @@ public class InterfaceProxy
 			interfaceType
 		}, interfaceType, typeBuilder);
 		var result = typeBuilder.CreateType();
-		cache.Add(name, result);
+		Cache.Add(name, result);
 		return result;
 
 	}
 
 	/// <summary>
-	/// Get the full name of a type.
+	///     Get the full name of a type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <returns>Full name.</returns>
-	static string GetFullName(Type type)
+	private static string GetFullName(Type type)
 	{
 		return CodeFunction.GetFriendlyName(type);
 	}
 
 	/// <summary>
-	/// Implements the interface recursively.
+	///     Implements the interface recursively.
 	/// </summary>
 	/// <param name="usedMethods">List of methods already implemented.</param>
 	/// <param name="implementedInterfaceList">List of already implemented interfaces.</param>
 	/// <param name="interfaceType">Interface type to implement.</param>
 	/// <param name="typeBuilder">The type builder to use.</param>
-	static void ImplementInterface(ICollection<string> usedMethods, ICollection<Type> implementedInterfaceList, Type interfaceType, TypeBuilder typeBuilder)
+	private static void ImplementInterface(ICollection<string> usedMethods, ICollection<Type> implementedInterfaceList, Type interfaceType, TypeBuilder typeBuilder)
 	{
 		GenerateMethods(usedMethods, interfaceType, typeBuilder);
 		var interfaces = interfaceType.GetInterfaces();
@@ -126,11 +193,11 @@ public class InterfaceProxy
 	}
 
 	/// <summary>
-	/// Emits the method's body.
+	///     Emits the method's body.
 	/// </summary>
 	/// <param name="methodInfo">Method info.</param>
 	/// <param name="methodBuilder">Method builder.</param>
-	static void EmitInvokeMethod(MethodInfo methodInfo, MethodBuilder methodBuilder)
+	private static void EmitInvokeMethod(MethodInfo methodInfo, MethodBuilder methodBuilder)
 	{
 		var iLGenerator = methodBuilder.GetILGenerator();
 		var name = GetMethodName(methodInfo);
@@ -169,7 +236,7 @@ public class InterfaceProxy
 		iLGenerator.Emit(OpCodes.Ldloc_1);
 		iLGenerator.Emit(OpCodes.Ldloca_S, 0);
 
-		iLGenerator.EmitCall(OpCodes.Call, tryInvokeMemberInfo, null);
+		iLGenerator.EmitCall(OpCodes.Call, TryInvokeMemberInfo, null);
 		iLGenerator.Emit(OpCodes.Stloc_2);
 		iLGenerator.Emit(OpCodes.Ldloc_2);
 		var falseLabel = iLGenerator.DefineLabel();
@@ -210,11 +277,11 @@ public class InterfaceProxy
 	}
 
 	/// <summary>
-	/// Copies the method's args array back to the out/ref parameters. 
+	///     Copies the method's args array back to the out/ref parameters.
 	/// </summary>
 	/// <param name="iLGenerator">The IL generator.</param>
 	/// <param name="parameters">Parameters.</param>
-	static void CopyArgsToParameters(ILGenerator iLGenerator, IReadOnlyList<ParameterInfo> parameters)
+	private static void CopyArgsToParameters(ILGenerator iLGenerator, IReadOnlyList<ParameterInfo> parameters)
 	{
 		for (var i = 0; i < parameters.Count; i++)
 		{
@@ -234,23 +301,19 @@ public class InterfaceProxy
 
 			if (elementType.IsGenericParameter || IsStruct(elementType))
 				iLGenerator.Emit(OpCodes.Stobj, elementType);
-			else if (storeMap.ContainsKey(elementType))
-			{
-				iLGenerator.Emit(storeMap[elementType]);
-			}
+			else if (StoreMap.ContainsKey(elementType))
+				iLGenerator.Emit(StoreMap[elementType]);
 			else
-			{
 				iLGenerator.Emit(OpCodes.Stind_Ref);
-			}
 		}
 	}
 
 	/// <summary>
-	/// Copies the method's parameters to the args array.
+	///     Copies the method's parameters to the args array.
 	/// </summary>
 	/// <param name="iLGenerator">The IL generator.</param>
 	/// <param name="parameters">Parameters.</param>
-	static void CopyParametersToArgs(ILGenerator iLGenerator, IReadOnlyList<ParameterInfo> parameters)
+	private static void CopyParametersToArgs(ILGenerator iLGenerator, IReadOnlyList<ParameterInfo> parameters)
 	{
 		for (var i = 0; i < parameters.Count; i++)
 		{
@@ -265,10 +328,12 @@ public class InterfaceProxy
 			if (p.ParameterType.IsByRef)
 			{
 				if (elementType.IsGenericParameter || IsStruct(elementType))
-					iLGenerator.Emit(OpCodes.Ldobj, elementType);
-				else if (loadMap.ContainsKey(elementType))
 				{
-					var instruction = loadMap[elementType];
+					iLGenerator.Emit(OpCodes.Ldobj, elementType);
+				}
+				else if (LoadMap.ContainsKey(elementType))
+				{
+					var instruction = LoadMap[elementType];
 					iLGenerator.Emit(instruction);
 				}
 				else
@@ -284,11 +349,11 @@ public class InterfaceProxy
 	}
 
 	/// <summary>
-	/// Sets the out parameters to their default values.
+	///     Sets the out parameters to their default values.
 	/// </summary>
 	/// <param name="iLGenerator">The IL generator.</param>
 	/// <param name="parameters">Parameters.</param>
-	static void SetOutParameters(ILGenerator iLGenerator, IReadOnlyList<ParameterInfo> parameters)
+	private static void SetOutParameters(ILGenerator iLGenerator, IReadOnlyList<ParameterInfo> parameters)
 	{
 		for (var i = 0; i < parameters.Count; i++)
 		{
@@ -307,19 +372,19 @@ public class InterfaceProxy
 			{
 				LoadDefaultValue(iLGenerator, elementType);
 				var instruction = OpCodes.Stind_Ref;
-				if (storeMap.ContainsKey(elementType))
-					instruction = storeMap[elementType];
+				if (StoreMap.ContainsKey(elementType))
+					instruction = StoreMap[elementType];
 				iLGenerator.Emit(instruction);
 			}
 		}
 	}
 
 	/// <summary>
-	/// Loads the default value for the given type. It will not do anything for structs.
+	///     Loads the default value for the given type. It will not do anything for structs.
 	/// </summary>
 	/// <param name="iLGenerator">The IL generator.</param>
 	/// <param name="type">Type.</param>
-	static void LoadDefaultValue(ILGenerator iLGenerator, Type type)
+	private static void LoadDefaultValue(ILGenerator iLGenerator, Type type)
 	{
 		if (type.IsGenericParameter) return;
 		if (type.IsValueType)
@@ -340,16 +405,18 @@ public class InterfaceProxy
 				iLGenerator.Emit(OpCodes.Ldc_I4, 0);
 		}
 		else if (type.IsClass || type.IsInterface)
+		{
 			iLGenerator.Emit(OpCodes.Ldnull);
+		}
 	}
 
 	/// <summary>
-	/// Generates the methods for the given interface type.
+	///     Generates the methods for the given interface type.
 	/// </summary>
 	/// <param name="usedMethods">Used methods.</param>
 	/// <param name="interfaceType">Interface type.</param>
 	/// <param name="typeBuilder">Type builder.</param>
-	static void GenerateMethods(ICollection<string> usedMethods, Type interfaceType, TypeBuilder typeBuilder)
+	private static void GenerateMethods(ICollection<string> usedMethods, Type interfaceType, TypeBuilder typeBuilder)
 	{
 		var methods = interfaceType.GetMethods();
 		foreach (var method in methods)
@@ -372,21 +439,21 @@ public class InterfaceProxy
 	}
 
 	/// <summary>
-	/// Gets the name of the method as a C# definition.
+	///     Gets the name of the method as a C# definition.
 	/// </summary>
 	/// <returns>The method name.</returns>
 	/// <param name="methodInfo">Method info.</param>
-	static string GetMethodName(MethodInfo methodInfo)
+	private static string GetMethodName(MethodInfo methodInfo)
 	{
 		return CodeFunction.GetFriendlyName(methodInfo);
 	}
 
 	/// <summary>
-	/// Creates the constructor base calls.
+	///     Creates the constructor base calls.
 	/// </summary>
 	/// <param name="baseClass">Base class.</param>
 	/// <param name="typeBuilder">The type builder.</param>
-	static void CreateConstructorBaseCalls(Type baseClass, TypeBuilder typeBuilder)
+	private static void CreateConstructorBaseCalls(Type baseClass, TypeBuilder typeBuilder)
 	{
 		var constructors = baseClass.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
@@ -417,75 +484,12 @@ public class InterfaceProxy
 	}
 
 	/// <summary>
-	/// Checks if a type is a struct
+	///     Checks if a type is a struct
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <returns>True if it is and false otherwise.</returns>
-	static bool IsStruct(Type type)
+	private static bool IsStruct(Type type)
 	{
 		return type?.IsValueType == true && !type.IsEnum && !type.IsPrimitive;
 	}
-
-	/// <summary>
-	/// The method handler.
-	/// </summary>
-	MethodHandler methodHandler;
-	/// <summary>
-	/// The try invoke member info.
-	/// </summary>
-	static readonly MethodInfo tryInvokeMemberInfo;
-	/// <summary>
-	/// The type cache.
-	/// </summary>
-	static readonly Dictionary<string, Type> cache;
-	/// <summary>
-	/// The module builder.
-	/// </summary>
-	static readonly ModuleBuilder moduleBuilder;
-
-	/// <summary>
-	/// The store map for the primitive types.
-	/// </summary>
-	static readonly Dictionary<Type, OpCode> storeMap = new()
-	{
-		[typeof(bool)] = OpCodes.Stind_I1,
-		[typeof(sbyte)] = OpCodes.Stind_I1,
-		[typeof(byte)] = OpCodes.Stind_I1,
-
-		[typeof(ushort)] = OpCodes.Stind_I2,
-		[typeof(short)] = OpCodes.Stind_I2,
-
-		[typeof(uint)] = OpCodes.Stind_I4,
-		[typeof(int)] = OpCodes.Stind_I4,
-
-		[typeof(IntPtr)] = Environment.Is64BitProcess ? OpCodes.Stind_I8 : OpCodes.Stind_I4,
-		[typeof(ulong)] = OpCodes.Stind_I8,
-		[typeof(long)] = OpCodes.Stind_I8,
-
-		[typeof(float)] = OpCodes.Stind_R4,
-		[typeof(double)] = OpCodes.Stind_R8
-	};
-
-	/// <summary>
-	/// The load map for the primitive types.
-	/// </summary>
-	static readonly Dictionary<Type, OpCode> loadMap = new()
-	{
-		[typeof(bool)] = OpCodes.Ldind_I1,
-		[typeof(sbyte)] = OpCodes.Ldind_I1,
-		[typeof(byte)] = OpCodes.Ldind_I1,
-
-		[typeof(ushort)] = OpCodes.Ldind_I2,
-		[typeof(short)] = OpCodes.Ldind_I2,
-
-		[typeof(uint)] = OpCodes.Ldind_I4,
-		[typeof(int)] = OpCodes.Ldind_I4,
-
-		[typeof(IntPtr)] = Environment.Is64BitProcess ? OpCodes.Ldind_I8 : OpCodes.Ldind_I4,
-		[typeof(ulong)] = OpCodes.Ldind_I8,
-		[typeof(long)] = OpCodes.Ldind_I8,
-
-		[typeof(float)] = OpCodes.Ldind_R4,
-		[typeof(double)] = OpCodes.Ldind_R8
-	};
 }

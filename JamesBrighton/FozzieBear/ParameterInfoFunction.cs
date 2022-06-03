@@ -3,12 +3,12 @@ using System.Reflection;
 namespace JamesBrighton.FozzieBear;
 
 /// <summary>
-///  Useful functions for reflection
+///     Useful functions for reflection
 /// </summary>
 public static class ParameterInfoFunction
 {
 	/// <summary>
-	/// Checks if the given parameter info instance is nullable.
+	///     Checks if the given parameter info instance is nullable.
 	/// </summary>
 	/// <param name="param">Param to check</param>
 	/// <returns>True if it is and false otherwise</returns>
@@ -28,11 +28,11 @@ public static class ParameterInfoFunction
 	}
 
 	/// <summary>
-	/// Reads the new compiler specific nullable attribute of the parameter or its parent scopes.
+	///     Reads the new compiler specific nullable attribute of the parameter or its parent scopes.
 	/// </summary>
 	/// <param name="param">The parameter to check for the availability of a nullable attribute.</param>
 	/// <returns>the value of the first attribute to find or <c>null</c> if none is available.</returns>
-	static byte[] GetNullableAttributeValue(ParameterInfo param)
+	private static byte[] GetNullableAttributeValue(ParameterInfo param)
 	{
 		// non reference types will be converted to Nullable<> if they are nullable.
 		// C# 8.0 nullable flag just changes the way reference types are handled. If enabled, then they are
@@ -47,9 +47,12 @@ public static class ParameterInfoFunction
 		return param.Member.DeclaringType != null ? GetNullableAttributeValue(param.Member.DeclaringType.GetCustomAttributes(true), true) : Array.Empty<byte>();
 	}
 
-	static bool IsReferenceType(Type t) => t.IsClass || t.IsInterface || t.IsArray || typeof(string).IsAssignableFrom(t);
+	private static bool IsReferenceType(Type t)
+	{
+		return t.IsClass || t.IsInterface || t.IsArray || typeof(string).IsAssignableFrom(t);
+	}
 
-	static byte[] GetNullableAttributeValue(IEnumerable<object> attributes, bool fromParent)
+	private static byte[] GetNullableAttributeValue(IEnumerable<object> attributes, bool fromParent)
 	{
 		if (attributes == null) return Array.Empty<byte>();
 

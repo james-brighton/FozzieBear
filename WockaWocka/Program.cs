@@ -1,4 +1,6 @@
-﻿var generator = new JamesBrighton.FozzieBear.AutoUnitTestGenerator
+﻿using JamesBrighton.FozzieBear;
+
+var generator = new AutoUnitTestGenerator
 {
 	InputFile = Environment.GetCommandLineArgs()[0]
 };

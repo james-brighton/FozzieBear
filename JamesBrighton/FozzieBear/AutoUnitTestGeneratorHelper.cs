@@ -9,17 +9,21 @@ using Mercury.Common.Function;
 namespace JamesBrighton.FozzieBear;
 
 /// <summary>
-/// This class represents auto unit test generator helper.
+///     This class represents auto unit test generator helper.
 /// </summary>
 internal static class AutoUnitTestGeneratorHelper
 {
 	/// <summary>
-	/// Gets the primitive types
+	///     Random number generator
+	/// </summary>
+	private static readonly Random Random = new();
+	/// <summary>
+	///     Gets the primitive types
 	/// </summary>
 	/// <returns>The types</returns>
 	public static Type[] GetPrimitiveTypes()
 	{
-		return new Type[]
+		return new[]
 		{
 			typeof(bool),
 			typeof(byte),
@@ -39,7 +43,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// An object extension method that executes a method and returns the result.
+	///     An object extension method that executes a method and returns the result.
 	/// </summary>
 	/// <param name="obj">The obj to act on.</param>
 	/// <param name="methodName">Name of the method.</param>
@@ -56,27 +60,26 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets a random number of items, shuffled
+	///     Gets a random number of items, shuffled
 	/// </summary>
 	/// <param name="list">List to get items from</param>
 	/// <param name="count">Number of items to get and shuffle</param>
 	/// <typeparam name="T">Type of items in the list</typeparam>
 	/// <returns>The shuffled list or an empty list otherwise</returns>
-
 	public static IEnumerable<T> GetRandomItems<T>(IReadOnlyList<T> list, int count)
 	{
 		if (count <= 0)
 			return new List<T>();
-		
+
 		if (count > list.Count)
 			count = list.Count;
 
 		var result = new List<T>();
 		var copy = new List<T>();
 		copy.AddRange(list);
-		for (var i = 0; i < count; i ++)
+		for (var i = 0; i < count; i++)
 		{
-			var index = random.Next(0, copy.Count);
+			var index = Random.Next(0, copy.Count);
 			result.Add(copy[index]);
 			copy.RemoveAt(index);
 		}
@@ -85,7 +88,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Checks if a given type implements the given interface
+	///     Checks if a given type implements the given interface
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <param name="interfaceType">Interface type to check against.</param>
@@ -106,7 +109,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the initialize type.
+	///     Gets the initialize type.
 	/// </summary>
 	/// <param name="originalType">Original type.</param>
 	/// <param name="currentType">Current type.</param>
@@ -116,8 +119,8 @@ internal static class AutoUnitTestGeneratorHelper
 		try
 		{
 			return currentType.IsGenericTypeDefinition &&
-				   currentType.GetGenericArguments().Length == originalType.GetGenericArguments().Length &&
-				   GenericArgumentsAreInitializable(originalType)
+			       currentType.GetGenericArguments().Length == originalType.GetGenericArguments().Length &&
+			       GenericArgumentsAreInitializable(originalType)
 				? currentType.MakeGenericType(originalType.GetGenericArguments())
 				: currentType;
 		}
@@ -128,7 +131,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Get the full name of a type.
+	///     Get the full name of a type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <returns>Full name.</returns>
@@ -139,7 +142,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the name of the constructor.
+	///     Gets the name of the constructor.
 	/// </summary>
 	/// <returns>The constructor name.</returns>
 	/// <param name="constructorInfo">Constructor info.</param>
@@ -154,14 +157,14 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets all enumerations of a given enum type.
+	///     Gets all enumerations of a given enum type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <returns>The enumerations.</returns>
 	public static List<AutoUnitTestParameter> GetEnumParams(Type type)
 	{
 		var fullName = GetFullName(type);
-		var values = Enum.GetValues(type)!;
+		var values = Enum.GetValues(type);
 		var first = Enum.GetName(type, (int)values.GetValue(0)!);
 		var last = Enum.GetName(type, (int)values.GetValue(values.Length - 1)!);
 		var m = typeof(RandomGen).GetMethod(nameof(RandomGen.GetEnum), BindingFlags.Public | BindingFlags.Static);
@@ -171,15 +174,15 @@ internal static class AutoUnitTestGeneratorHelper
 		var random = Enum.GetName(type, v!);
 		var result = new List<AutoUnitTestParameter>
 		{
-			new AutoUnitTestParameter(fullName, $"{fullName}.{first}"),
-			new AutoUnitTestParameter(fullName, $"{fullName}.{last}"),
-			new AutoUnitTestParameter(fullName, $"{fullName}.{random}")
+			new(fullName, $"{fullName}.{first}"),
+			new(fullName, $"{fullName}.{last}"),
+			new(fullName, $"{fullName}.{random}")
 		};
 		return result.DistinctBy(x => x.Value).ToList();
 	}
 
 	/// <summary>
-	/// Generates the C# method declaration for the given property.
+	///     Generates the C# method declaration for the given property.
 	/// </summary>
 	/// <param name="prop">The property.</param>
 	/// <param name="counter">Counter for the method name generation.</param>
@@ -189,7 +192,7 @@ internal static class AutoUnitTestGeneratorHelper
 	/// <param name="constructorParamList">String with the list of the constructor's parameter list</param>
 	/// <returns>The C# code.</returns>
 	public static List<string> GenerateMethodDeclaration(PropertyInfo prop, ref Dictionary<string, int> counter,
-		bool needsInstance, string fullName, IReadOnlyCollection<string> constructorParamDeclarations,
+		bool needsInstance, string fullName, IEnumerable<string> constructorParamDeclarations,
 		string constructorParamList)
 	{
 		var method = new List<string>
@@ -205,7 +208,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets all combinations for the given primitive type.
+	///     Gets all combinations for the given primitive type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <returns>The combinations.</returns>
@@ -229,7 +232,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets all combinations for the given string type.
+	///     Gets all combinations for the given string type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <param name="isNullable">Type is nullable (true) or not (false)</param>
@@ -249,7 +252,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets all combinations for the given object type.
+	///     Gets all combinations for the given object type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <param name="isNullable">Type is nullable (true) or not (false)</param>
@@ -264,19 +267,19 @@ internal static class AutoUnitTestGeneratorHelper
 
 		var randomPrimitiveTypeList = new List<AutoUnitTestParameter>
 		{
-			new AutoUnitTestParameter(fullName, "1"),
-			new AutoUnitTestParameter(fullName, "1.0d"),
-			new AutoUnitTestParameter(fullName, "1.0f"),
-			new AutoUnitTestParameter(fullName, "false")
+			new(fullName, "1"),
+			new(fullName, "1.0d"),
+			new(fullName, "1.0f"),
+			new(fullName, "false")
 		};
-		var index = random.Next(0, randomPrimitiveTypeList.Count);
+		var index = Random.Next(0, randomPrimitiveTypeList.Count);
 		result.Add(randomPrimitiveTypeList[index]);
 		result.Add(new AutoUnitTestParameter(fullName, "\"\""));
 		return result.DistinctBy(x => x.Value).ToList();
 	}
 
 	/// <summary>
-	/// Gets all combinations for the given type 'type'.
+	///     Gets all combinations for the given type 'type'.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <param name="isNullable">Type is nullable (true) or not (false)</param>
@@ -292,7 +295,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets all combinations for the given date/time offset type.
+	///     Gets all combinations for the given date/time offset type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <param name="isNullable">Type is nullable (true) or not (false)</param>
@@ -308,7 +311,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets all combinations for the given delegate type.
+	///     Gets all combinations for the given delegate type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <returns>The combinations.</returns>
@@ -346,7 +349,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Generates the array inits for the given name (full name).
+	///     Generates the array inits for the given name (full name).
 	/// </summary>
 	/// <param name="fullName">Name of the array.</param>
 	/// <param name="isNullable">Type is nullable (true) or not (false)</param>
@@ -363,7 +366,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the referenced assemblies for the given assembly.
+	///     Gets the referenced assemblies for the given assembly.
 	/// </summary>
 	/// <param name="assembly">Assembly to get references for.</param>
 	/// <returns>List of assemblies</returns>
@@ -375,7 +378,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Converts an integer to a hexadecimal represented string.
+	///     Converts an integer to a hexadecimal represented string.
 	/// </summary>
 	/// <param name="i">The integer to convert.</param>
 	/// <param name="length">The length of the value.</param>
@@ -389,7 +392,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the random value.
+	///     Gets the random value.
 	/// </summary>
 	/// <typeparam name="T">Type of the value</typeparam>
 	/// <returns>The random value.</returns>
@@ -397,17 +400,17 @@ internal static class AutoUnitTestGeneratorHelper
 	{
 		if (typeof(T) == typeof(bool))
 		{
-			object obj = random.Next(0, 2) == 1;
+			object obj = Random.Next(0, 2) == 1;
 			return (T)obj;
 		}
 		var bytes = new byte[GetManagedSize(typeof(T))];
-		for (var i = 0; i < bytes.Length; i++) bytes[i] = (byte)random.Next(0, 256);
+		for (var i = 0; i < bytes.Length; i++) bytes[i] = (byte)Random.Next(0, 256);
 		var result = ToT<T>(bytes);
 		return result;
 	}
 
 	/// <summary>
-	/// Gets the random value.
+	///     Gets the random value.
 	/// </summary>
 	/// <typeparam name="T">Type of the value</typeparam>
 	/// <returns>The random value.</returns>
@@ -418,18 +421,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the name of the C# file.
-	/// </summary>
-	/// <param name="directory">Directory.</param>
-	/// <param name="fileName">File name.</param>
-	/// <returns>The C# file name.</returns>
-	public static string GetCsFileName(string directory, string fileName)
-	{
-		return Path.GetFullPath(Path.Combine(directory, fileName + ".cs"));
-	}
-
-	/// <summary>
-	/// Gets the name of the unit test file.
+	///     Gets the name of the unit test file.
 	/// </summary>
 	/// <returns>The unit test file name.</returns>
 	/// <param name="type">Type of the class.</param>
@@ -440,8 +432,8 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Determines whether the beginning of this string instance matches the specified string when compared using the
-	/// specified comparison option.
+	///     Determines whether the beginning of this string instance matches the specified string when compared using the
+	///     specified comparison option.
 	/// </summary>
 	/// <param name="obj">This string</param>
 	/// <param name="value">The string to compare.</param>
@@ -453,7 +445,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Creates the C# class file's header.
+	///     Creates the C# class file's header.
 	/// </summary>
 	/// <param name="type">Type of the C# class.</param>
 	/// <param name="name">Name of the C# class.</param>
@@ -473,7 +465,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the name of the method.
+	///     Gets the name of the method.
 	/// </summary>
 	/// <returns>The method name.</returns>
 	/// <param name="methodInfo">Method info.</param>
@@ -483,49 +475,17 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the name of the get property.
-	/// </summary>
-	/// <returns>The get property name or "" otherwise.</returns>
-	/// <param name="property">Property.</param>
-	public static string GetGetPropertyName(PropertyInfo property)
-	{
-		if (property.GetMethod == null) return "";
-		var parameters = property.GetMethod.GetParameters();
-		if (!parameters.Any())
-			return $"{GetFullName(property.PropertyType)} {property.Name}";
-
-		var type = parameters[0].ParameterType;
-		return $"{GetFullName(property.PropertyType)} {property.Name}[{GetFullName(type)}]";
-	}
-
-	/// <summary>
-	/// Gets the name of the set property.
-	/// </summary>
-	/// <returns>The set property name or "" otherwise.</returns>
-	/// <param name="property">Property.</param>
-	public static string GetSetPropertyName(PropertyInfo property)
-	{
-		if (property.SetMethod == null) return "";
-		var parameters = property.SetMethod.GetParameters();
-		if (parameters.Length <= 1)
-			return $"{GetFullName(property.PropertyType)} {property.Name}";
-
-		var type = parameters[0].ParameterType;
-		return $"{GetFullName(property.PropertyType)} {property.Name}[{GetFullName(type)}]";
-	}
-
-	/// <summary>
-	/// Gets the random culture info parameter.
+	///     Gets the random culture info parameter.
 	/// </summary>
 	/// <returns>The random culture info parameter.</returns>
 	public static string GetRandomCultureInfoParam()
 	{
 		var cultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
-		return cultures[random.Next(0, cultures.Length)].Name;
+		return cultures[Random.Next(0, cultures.Length)].Name;
 	}
 
 	/// <summary>
-	/// Checks if the a given type is a delegate.
+	///     Checks if the a given type is a delegate.
 	/// </summary>
 	/// <param name="type">Type to check.</param>
 	/// <returns>True if it is and false otherwise.</returns>
@@ -535,7 +495,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the random value.
+	///     Gets the random value.
 	/// </summary>
 	/// <returns>The random value.</returns>
 	/// <param name="type">Type.</param>
@@ -549,7 +509,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Check if 2 types are equal
+	///     Check if 2 types are equal
 	/// </summary>
 	/// <param name="t1">First type.</param>
 	/// <param name="t2">Second type.</param>
@@ -560,7 +520,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Returns the cartesian product from a 2D list.
+	///     Returns the cartesian product from a 2D list.
 	/// </summary>
 	/// <param name="list">The 2D list.</param>
 	/// <typeparam name="T">The 1st type parameter.</typeparam>
@@ -575,11 +535,11 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets a random primitive value
+	///     Gets a random primitive value
 	/// </summary>
 	/// <param name="type">Type of the primitive</param>
 	/// <returns>The value as string</returns>
-	static string GetRandomPrimitiveValue(Type type)
+	private static string GetRandomPrimitiveValue(Type type)
 	{
 		var m = typeof(RandomGen).GetMethod(nameof(RandomGen.GetValue), BindingFlags.Public | BindingFlags.Static);
 		if (m == null) return "";
@@ -593,12 +553,12 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Converts a primitive value to string
+	///     Converts a primitive value to string
 	/// </summary>
 	/// <param name="value">Value to convert</param>
 	/// <typeparam name="T">Type of value</typeparam>
 	/// <returns>The string</returns>
-	static string PrimitiveToString<T>(T value)
+	private static string PrimitiveToString<T>(T value)
 	{
 		return value switch
 		{
@@ -612,11 +572,11 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the referenced assemblies for the given assembly.
+	///     Gets the referenced assemblies for the given assembly.
 	/// </summary>
 	/// <param name="assembly">Assembly to get references for.</param>
 	/// <param name="result">List of assemblies to add to.</param>
-	static void GetAllAssemblies(Assembly assembly, List<Assembly> result)
+	private static void GetAllAssemblies(Assembly assembly, List<Assembly> result)
 	{
 		var directoryName = assembly.GetName().CodeBase ?? ".\\";
 		directoryName = Path.GetDirectoryName(new Uri(directoryName).LocalPath) ?? ".\\";
@@ -649,35 +609,35 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets a random string.
+	///     Gets a random string.
 	/// </summary>
 	/// <param name="minLength">Minimum length.</param>
 	/// <param name="maxLength">Maximum length (inclusive).</param>
 	/// <returns>The random string.</returns>
-	static string GetRandomString(int minLength, int maxLength)
+	private static string GetRandomString(int minLength, int maxLength)
 	{
-		var length = random.Next(minLength, maxLength + 1);
+		var length = Random.Next(minLength, maxLength + 1);
 		return GetRandomString(length);
 	}
 
 	/// <summary>
-	/// Gets a random string.
-	/// <param name="length">Length of the string.</param>
+	///     Gets a random string.
+	///     <param name="length">Length of the string.</param>
 	/// </summary>
 	/// <returns>The random string.</returns>
-	static string GetRandomString(int length)
+	private static string GetRandomString(int length)
 	{
 		var bytes = new byte[length];
-		for (var i = 0; i < bytes.Length; i++) bytes[i] = (byte)random.Next(1, 128);
+		for (var i = 0; i < bytes.Length; i++) bytes[i] = (byte)Random.Next(1, 128);
 		return AddEscapeSequences(Encoding.ASCII.GetString(bytes));
 	}
 
 	/// <summary>
-	/// Adds escape sequences to a given string.
+	///     Adds escape sequences to a given string.
 	/// </summary>
 	/// <param name="value">String to process.</param>
 	/// <returns>String with escape sequences.</returns>
-	static string AddEscapeSequences(string value)
+	private static string AddEscapeSequences(string value)
 	{
 		var result = "";
 
@@ -715,35 +675,35 @@ internal static class AutoUnitTestGeneratorHelper
 					result += "\\v";
 					break;
 				default:
-					{
-						if (!IsVisible(c))
-							result += $"\\u{IntToHex(c, 4)}";
-						else
-							result += c;
-						break;
-					}
+				{
+					if (!IsVisible(c))
+						result += $"\\u{IntToHex(c, 4)}";
+					else
+						result += c;
+					break;
+				}
 			}
 
 		return result;
 	}
 
 	/// <summary>
-	/// Checks if a character is visible
+	///     Checks if a character is visible
 	/// </summary>
 	/// <param name="c">The character to check.</param>
 	/// <returns>True if it is visible and false otherwise.</returns>
-	static bool IsVisible(char c)
+	private static bool IsVisible(char c)
 	{
 		return !char.IsControl(c) || char.IsWhiteSpace(c);
 	}
 
 	/// <summary>
-	/// Converts a byte array to type T.
+	///     Converts a byte array to type T.
 	/// </summary>
 	/// <typeparam name="T">Type of the value</typeparam>
 	/// <param name="bytes">Array to convert</param>
 	/// <returns>The converted value.</returns>
-	static T ToT<T>(IEnumerable bytes)
+	private static T ToT<T>(IEnumerable bytes)
 	{
 		var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
 		var structure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T))!;
@@ -752,11 +712,11 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the size of a type in bytes
+	///     Gets the size of a type in bytes
 	/// </summary>
 	/// <param name="type">The type</param>
 	/// <returns>The size.</returns>
-	static int GetManagedSize(Type type)
+	private static int GetManagedSize(Type type)
 	{
 		var method = new DynamicMethod("GetManagedSizeImpl", typeof(uint), Array.Empty<Type>(),
 			typeof(AutoUnitTestGenerator), false);
@@ -770,28 +730,28 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Check if the given type's generic arguments are initializable.
+	///     Check if the given type's generic arguments are initializable.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <returns>True if they are and false otherwise.</returns>
-	static bool GenericArgumentsAreInitializable(Type type)
+	private static bool GenericArgumentsAreInitializable(Type type)
 	{
 		return type.IsGenericType && type.GetGenericArguments().All(a => !a.IsAbstract && a.IsPublic);
 	}
 
 	/// <summary>
-	/// Get a list of public static fields.
+	///     Get a list of public static fields.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <returns>List of public static fields.</returns>
-	static IEnumerable<string> StaticFields(Type type)
+	private static IEnumerable<string> StaticFields(Type type)
 	{
 		var fields = type.GetFields(BindingFlags.Public | BindingFlags.Static).Where(x => x.FieldType == type);
 		return fields.Select(x => $"{GetFullName(type)}.{x.Name}").ToList();
 	}
 
 	/// <summary>
-	/// Gets the .NET name of a given C# name.
+	///     Gets the .NET name of a given C# name.
 	/// </summary>
 	/// <param name="typeName">C# name.</param>
 	/// <returns>The .NET name.</returns>
@@ -801,7 +761,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Converts a name to a class name.
+	///     Converts a name to a class name.
 	/// </summary>
 	/// <param name="name">Name to convert.</param>
 	/// <returns>Converted name or "" otherwise.</returns>
@@ -829,7 +789,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Converts a name to an upper camel-case name.
+	///     Converts a name to an upper camel-case name.
 	/// </summary>
 	/// <param name="name">String to process.</param>
 	/// <returns>The result.</returns>
@@ -849,7 +809,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the method number appendix.
+	///     Gets the method number appendix.
 	/// </summary>
 	/// <param name="name">Name of the method.</param>
 	/// <param name="counter">Reference counter.</param>
@@ -867,8 +827,8 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the exceptions for a given member thru the <see cref="JamesBrighton.FozzieBear.ThrowsExceptionAttribute" />
-	/// attribute.
+	///     Gets the exceptions for a given member thru the <see cref="JamesBrighton.FozzieBear.ThrowsExceptionAttribute" />
+	///     attribute.
 	/// </summary>
 	/// <param name="member">Member.</param>
 	/// <returns>The exceptions.</returns>
@@ -878,28 +838,21 @@ internal static class AutoUnitTestGeneratorHelper
 			GetFullName(a.GetType())
 				.Equals("JamesBrighton.FozzieBear.ThrowsExceptionAttribute", StringComparison.Ordinal));
 		if (attribute == null)
-		{
 			return new List<Type>();
-		}
-		else if (InvokeMethod(attribute, "GetExceptions") is List<string> result)
-		{
+		if (InvokeMethod(attribute, "GetExceptions") is List<string> result)
 			return GetExceptions(result);
-		}
-		else
-		{
-			return new List<Type>();
-		}
+		return new List<Type>();
 	}
 
 	/// <summary>
-	/// Gets the returns for a given member thru the <see cref="JamesBrighton.FozzieBear.ReturnAttribute" />
-	/// attribute.
+	///     Gets the returns for a given member thru the <see cref="JamesBrighton.FozzieBear.ReturnAttribute" />
+	///     attribute.
 	/// </summary>
 	/// <param name="member">Member.</param>
 	/// <returns>The returns.</returns>
 	public static string GetReturns(MemberInfo member)
 	{
-		var attribute = member.GetCustomAttributes(inherit: true).FirstOrDefault(a =>
+		var attribute = member.GetCustomAttributes(true).FirstOrDefault(a =>
 			GetFullName(a.GetType())
 				.Equals("JamesBrighton.FozzieBear.ReturnAttribute", StringComparison.Ordinal));
 		var result = attribute == null
@@ -911,15 +864,15 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the returns for a given class and method thru the <see cref="JamesBrighton.FozzieBear.ReturnForAttribute" />
-	/// attribute.
+	///     Gets the returns for a given class and method thru the <see cref="JamesBrighton.FozzieBear.ReturnForAttribute" />
+	///     attribute.
 	/// </summary>
 	/// <param name="classType">Type of the class holding the attribute.</param>
 	/// <param name="method">Method.</param>
 	/// <returns>The returns.</returns>
 	public static string GetReturnsFor(Type classType, MethodInfo method)
 	{
-		var attributes = classType.GetCustomAttributes(inherit: true).Where(a =>
+		var attributes = classType.GetCustomAttributes(true).Where(a =>
 			GetFullName(a.GetType())
 				.Equals("JamesBrighton.FozzieBear.ReturnForAttribute", StringComparison.Ordinal));
 		foreach (var attribute in attributes)
@@ -935,7 +888,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Check if the given member is marked as a member to skip in the automatic unit test.
+	///     Check if the given member is marked as a member to skip in the automatic unit test.
 	/// </summary>
 	/// <param name="member">Member.</param>
 	/// <returns>True to skip and false otherwise.</returns>
@@ -947,7 +900,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the parameters.
+	///     Gets the parameters.
 	/// </summary>
 	/// <param name="parameters">Parameters to use.</param>
 	/// <param name="paramPrefix">Prefix for the variable names.</param>
@@ -970,7 +923,7 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the core of a type.
+	///     Gets the core of a type.
 	/// </summary>
 	/// <param name="type">Type.</param>
 	/// <returns>The core type.</returns>
@@ -981,37 +934,36 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	/// Gets the types of the exceptions.
+	///     Gets the types of the exceptions.
 	/// </summary>
 	/// <returns>The exceptions.</returns>
-	static IEnumerable<Type> GetExceptions(List<string> exceptions)
+	private static IEnumerable<Type> GetExceptions(IReadOnlyCollection<string> exceptions)
 	{
 		var result = new List<Type>();
 		foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-		{
-			foreach (var t in exceptions.Select(e => GetType(assembly, e)).Where(t => t != null && !result.Any(x => TypeEquals(x, t))))
-			{
-				result.Add(t!);
-			}
-		}
+		foreach (var t in exceptions.Select(e => GetType(assembly, e)).Where(t => t != null && !result.Any(x => TypeEquals(x, t))))
+			result.Add(t!);
 		return result;
 	}
 
 	/// <summary>
-	/// Gets the Type with the specified name in the given assembly, performing a case-sensitive search.
+	///     Gets the Type with the specified name in the given assembly, performing a case-sensitive search.
 	/// </summary>
 	/// <param name="assembly">Assembly to search in.</param>
 	/// <param name="typeName">The full name of the type to search for.</param>
 	/// <returns>The type or null otherwise.</returns>
-	static Type? GetType(Assembly assembly, string typeName) => Array.Find(assembly.GetTypes(), type => GetFullName(type).Equals(typeName, StringComparison.Ordinal));
+	private static Type? GetType(Assembly assembly, string typeName)
+	{
+		return Array.Find(assembly.GetTypes(), type => GetFullName(type).Equals(typeName, StringComparison.Ordinal));
+	}
 
 	/// <summary>
-	/// Converts a list of strings to 1 string using the given terminator.
+	///     Converts a list of strings to 1 string using the given terminator.
 	/// </summary>
 	/// <returns>The result.</returns>
 	/// <param name="list">The list.</param>
 	/// <param name="terminator">Terminator.</param>
-	static string StringsToString(IEnumerable<string?> list, string terminator)
+	private static string StringsToString(IEnumerable<string?> list, string terminator)
 	{
 		var result = new StringBuilder();
 		using var enumerator = list.GetEnumerator();
@@ -1028,9 +980,4 @@ internal static class AutoUnitTestGeneratorHelper
 
 		return result.ToString();
 	}
-
-	/// <summary>
-	/// Random number generator
-	/// </summary>
-	static readonly Random random = new();
 }
