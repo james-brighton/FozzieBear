@@ -369,11 +369,12 @@ internal static class AutoUnitTestGeneratorHelper
 	///     Gets the referenced assemblies for the given assembly.
 	/// </summary>
 	/// <param name="assembly">Assembly to get references for.</param>
+	/// <param name="excludeFiles">List of files to exclude.</param>
 	/// <returns>List of assemblies</returns>
-	public static IList<Assembly> GetAllAssemblies(Assembly assembly)
+	public static IList<Assembly> GetAllAssemblies(Assembly assembly, IEnumerable<string> excludeFiles)
 	{
 		var result = new List<Assembly>();
-		GetAllAssemblies(assembly, result);
+		GetAllAssemblies(assembly, excludeFiles, result);
 		return result;
 	}
 
@@ -572,11 +573,12 @@ internal static class AutoUnitTestGeneratorHelper
 	}
 
 	/// <summary>
-	///     Gets the referenced assemblies for the given assembly.
+	/// Gets the referenced assemblies for the given assembly.
 	/// </summary>
 	/// <param name="assembly">Assembly to get references for.</param>
+	/// <param name="excludeFiles">List of files to exclude.</param>
 	/// <param name="result">List of assemblies to add to.</param>
-	private static void GetAllAssemblies(Assembly assembly, List<Assembly> result)
+	private static void GetAllAssemblies(Assembly assembly, IEnumerable<string> excludeFiles, List<Assembly> result)
 	{
 		var directoryName = assembly.GetName().CodeBase ?? ".\\";
 		directoryName = Path.GetDirectoryName(new Uri(directoryName).LocalPath) ?? ".\\";
@@ -587,6 +589,7 @@ internal static class AutoUnitTestGeneratorHelper
 			if (result.Any(x => x.FullName == assemblyName.FullName)) continue;
 			var fileName = Path.GetFullPath(Path.Combine(directoryName ?? ".\\", assemblyName.Name + ".dll"));
 			if (!File.Exists(fileName)) continue;
+			if (excludeFiles.Any(x => x.Equals(fileName, StringComparison.OrdinalIgnoreCase))) continue;
 
 			try
 			{
@@ -595,7 +598,7 @@ internal static class AutoUnitTestGeneratorHelper
 				// Outside current dir?
 				if (!path.StartsWith(directoryName!, StringComparison.Ordinal)) continue;
 				if (!result.Exists(x => x.FullName == a.FullName)) result.Add(a);
-				GetAllAssemblies(a, result);
+				GetAllAssemblies(a, excludeFiles, result);
 			}
 			catch (FileNotFoundException)
 			{

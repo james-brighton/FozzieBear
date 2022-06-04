@@ -24,6 +24,12 @@ public class AutoUnitTestGenerator
 	public string InputFile { get; set; } = "";
 
 	/// <summary>
+	///     Gets or sets the exclude files.
+	/// </summary>
+	/// <value>The exclude files.</value>
+	public IList<string> ExcludeFiles { get; set; } = new List<string>();
+
+	/// <summary>
 	///     Generates the tests.
 	/// </summary>
 	/// <returns>List with name and file content.</returns>
@@ -35,7 +41,7 @@ public class AutoUnitTestGenerator
 		var names = new List<string>();
 		var files = new List<List<string>>();
 		var fullInputFile = Path.GetFullPath(InputFile);
-		assemblies = AutoUnitTestGeneratorHelper.GetAllAssemblies(Assembly.LoadFrom(fullInputFile));
+		assemblies = AutoUnitTestGeneratorHelper.GetAllAssemblies(Assembly.LoadFrom(fullInputFile), ExcludeFiles);
 
 		foreach (var assembly in assemblies)
 		{
@@ -162,7 +168,7 @@ public class AutoUnitTestGenerator
 		{
 			if (m.DeclaringType == null) return false;
 			return !AutoUnitTestGeneratorHelper.StartsWith(m.DeclaringType.Namespace ?? "", "System", StringComparison.Ordinal) && !m.IsSpecialName &&
-			       !AutoUnitTestGeneratorHelper.Skip(m);
+			       !IsExcluded(m) && !AutoUnitTestGeneratorHelper.Skip(m);
 		}).OrderBy(m => m.Name).ToList();
 
 		foreach (var m in methods)
@@ -211,7 +217,7 @@ public class AutoUnitTestGenerator
 	{
 		if (p.DeclaringType == null) return false;
 		return !AutoUnitTestGeneratorHelper.StartsWith(p.DeclaringType.Namespace ?? "", "System", StringComparison.Ordinal) && !p.IsSpecialName &&
-		       p.CanWrite && p.GetSetMethod(true)?.IsPublic == true && !AutoUnitTestGeneratorHelper.Skip(p);
+		       p.CanWrite && p.GetSetMethod(true)?.IsPublic == true && !IsExcluded(p) && !AutoUnitTestGeneratorHelper.Skip(p);
 	}
 
 	/// <summary>
@@ -243,7 +249,7 @@ public class AutoUnitTestGenerator
 	{
 		if (p.DeclaringType == null) return false;
 		return !AutoUnitTestGeneratorHelper.StartsWith(p.DeclaringType.Namespace ?? "", "System", StringComparison.Ordinal) && !p.IsSpecialName &&
-		       p.CanRead && p.GetGetMethod(true)?.IsPublic == true && !AutoUnitTestGeneratorHelper.Skip(p);
+		       p.CanRead && p.GetGetMethod(true)?.IsPublic == true && !IsExcluded(p) && !AutoUnitTestGeneratorHelper.Skip(p);
 	}
 
 	/// <summary>
@@ -829,5 +835,21 @@ public class AutoUnitTestGenerator
 		else if (type.IsClass && !type.IsAbstract) result = GetClassParams(type, isNullable);
 
 		return result;
+	}
+
+	/// <summary>
+	///     Checks if the given member is to be excluded (based on its assembly file name)
+	/// </summary>
+	/// <param name="m">Member to check</param>
+	/// <returns>True if it is and false otherwise.</returns>
+	private bool IsExcluded(MemberInfo m)
+	{
+		var fileName = m.DeclaringType?.Assembly.Location ?? "";
+		foreach (var excludeFile in ExcludeFiles)
+		{
+			if (excludeFile.Equals(fileName, StringComparison.OrdinalIgnoreCase))
+				return true;
+		}
+		return false;
 	}
 }
