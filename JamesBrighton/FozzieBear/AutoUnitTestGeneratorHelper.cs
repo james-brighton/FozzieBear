@@ -863,6 +863,7 @@ internal static class AutoUnitTestGeneratorHelper
 			: InvokeMethod(attribute, "GetReturns") is IEnumerable<string> list
 				? list
 				: new List<string>();
+		result = result.Select(x => "(" + x + ")");
 		return StringsToString(result, " || ");
 	}
 
