@@ -420,23 +420,20 @@ public class AutoUnitTestGenerator
 
 				method.Add(
 					$"{jump}\t\t\t{methodResult}{(needsInstance ? "instance" : fullName)}.{m.Name}{genericArgNames}({methodParamList});");
-				if (OutputResult)
-				{
-					if (m.ReturnType != typeof(void) && string.IsNullOrEmpty(returns))
-					{
-						switch (m.ReturnType.IsValueType)
-						{
-							case true when m.ReturnType != typeof(bool):
-								method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + result.ToString());");
-								break;
-							case false:
-								method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + (result?.ToString() ?? \"null\"));");
-								break;
-						}
-					}
-				}
+                if (OutputResult && m.ReturnType != typeof(void) && string.IsNullOrEmpty(returns))
+                {
+                    switch (m.ReturnType.IsValueType)
+                    {
+                        case true when m.ReturnType != typeof(bool):
+                            method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + result.ToString());");
+                            break;
+                        case false:
+                            method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + (result?.ToString() ?? \"null\"));");
+                            break;
+                    }
+                }
 
-				if (!string.IsNullOrEmpty(returns)) method.Add($"{jump}\t\t\tAssert.IsTrue({returns});");
+                if (!string.IsNullOrEmpty(returns)) method.Add($"{jump}\t\t\tAssert.IsTrue({returns});");
 				if (exceptionTypes.Any())
 				{
 					method.Add("\t\t\t}");
