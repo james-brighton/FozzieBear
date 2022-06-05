@@ -423,13 +423,9 @@ public class AutoUnitTestGenerator
                 if (OutputResult && m.ReturnType != typeof(void) && string.IsNullOrEmpty(returns))
                 {
                     if (m.ReturnType.IsValueType && m.ReturnType != typeof(bool))
-                    {
                         method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + result.ToString());");
-                    }
                     else if (!m.ReturnType.IsValueType)
-                    {
                         method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + (result?.ToString() ?? \"null\"));");
-                    }
                 }
 
                 if (!string.IsNullOrEmpty(returns)) method.Add($"{jump}\t\t\tAssert.IsTrue({returns});");
