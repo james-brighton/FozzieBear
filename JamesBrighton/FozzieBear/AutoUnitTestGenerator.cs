@@ -30,6 +30,12 @@ public class AutoUnitTestGenerator
 	public IList<string> ExcludeFiles { get; set; } = new List<string>();
 
 	/// <summary>
+	///     Gets or sets generate result output flag.
+	/// </summary>
+	/// <value>The generate result output flag.</value>
+	public bool OutputResult { get; set; }
+
+	/// <summary>
 	///     Generates the tests.
 	/// </summary>
 	/// <returns>List with name and file content.</returns>
@@ -414,20 +420,22 @@ public class AutoUnitTestGenerator
 
 				method.Add(
 					$"{jump}\t\t\t{methodResult}{(needsInstance ? "instance" : fullName)}.{m.Name}{genericArgNames}({methodParamList});");
-#if DEBUG
-				if (m.ReturnType != typeof(void) && string.IsNullOrEmpty(returns))
+				if (OutputResult)
 				{
-					switch (m.ReturnType.IsValueType)
+					if (m.ReturnType != typeof(void) && string.IsNullOrEmpty(returns))
 					{
-						case true when m.ReturnType != typeof(bool):
-							method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + result.ToString());");
-							break;
-						case false:
-							method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + (result?.ToString() ?? \"null\"));");
-							break;
+						switch (m.ReturnType.IsValueType)
+						{
+							case true when m.ReturnType != typeof(bool):
+								method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + result.ToString());");
+								break;
+							case false:
+								method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + (result?.ToString() ?? \"null\"));");
+								break;
+						}
 					}
 				}
-#endif
+
 				if (!string.IsNullOrEmpty(returns)) method.Add($"{jump}\t\t\tAssert.IsTrue({returns});");
 				if (exceptionTypes.Any())
 				{
