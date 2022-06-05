@@ -34,3 +34,31 @@ public class MyClassToTest
 {
 }
 ````
+
+You can specify the range of a method's result and skip checking specific methods:
+
+````csharp
+using JamesBrighton.FozzieBear;
+
+namespace MyNamespace;
+
+[AutoUnitTest]
+public class IntToStringConverter : IValueConverter
+{
+	[Return("result == null", "result is string")]
+	public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+	{
+		if (value is not int i)
+			return null;
+		
+		return i.ToString();
+	}
+
+	[Skip]
+	public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+	{
+		return null;
+	}
+}
+````
+
