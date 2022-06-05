@@ -420,17 +420,12 @@ public class AutoUnitTestGenerator
 
 				method.Add(
 					$"{jump}\t\t\t{methodResult}{(needsInstance ? "instance" : fullName)}.{m.Name}{genericArgNames}({methodParamList});");
-                if (OutputResult && m.ReturnType != typeof(void) && string.IsNullOrEmpty(returns))
+                 if (OutputResult && m.ReturnType != typeof(void) && string.IsNullOrEmpty(returns))
                 {
-                    switch (m.ReturnType.IsValueType)
-                    {
-                        case true when m.ReturnType != typeof(bool):
-                            method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + result.ToString());");
-                            break;
-                        case false:
-                            method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}: \" + (result?.ToString() ?? \"null\"));");
-                            break;
-                    }
+                    if (m.ReturnType.IsValueType && m.ReturnType != typeof(bool))
+                        method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}\\t\" + result.ToString());");
+                    else if (!m.ReturnType.IsValueType)
+                        method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}\\t\" + (result?.ToString() ?? \"null\"));");
                 }
 
                 if (!string.IsNullOrEmpty(returns)) method.Add($"{jump}\t\t\tAssert.IsTrue({returns});");
