@@ -422,9 +422,9 @@ public class AutoUnitTestGenerator
 					$"{jump}\t\t\t{methodResult}{(needsInstance ? "instance" : fullName)}.{m.Name}{genericArgNames}({methodParamList});");
                  if (OutputResult && m.ReturnType != typeof(void) && string.IsNullOrEmpty(returns))
                 {
-                    if (m.ReturnType.IsValueType && m.ReturnType != typeof(bool))
+                    if (m.ReturnType.IsValueType)
                         method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}\\t\" + result.ToString());");
-                    else if (!m.ReturnType.IsValueType)
+                    else
                         method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}\\t\" + (result?.ToString() ?? \"null\"));");
                 }
 
