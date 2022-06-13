@@ -116,8 +116,12 @@ internal static class AutoUnitTestGeneratorHelper
                 interfaceType = interfaceType.MakeGenericType(typeArgs);
         }
 
+        if (ImplementsInterfaces.TryGetValue((type, interfaceType), out var v))
+            return v;
+
         var interfaces = type.GetInterfaces();
         var result = interfaces.Any(t => TypeEquals(t, interfaceType));
+        ImplementsInterfaces.Add((type, interfaceType), result);
         return result;
     }
 
@@ -129,9 +133,12 @@ internal static class AutoUnitTestGeneratorHelper
     /// <returns>The initializable type.</returns>
     public static Type? GetInitializableType(Type originalType, Type currentType)
     {
+        if (Initializes.TryGetValue((originalType, currentType), out var v))
+            return v;
+        Type? result;
         try
         {
-            return currentType.IsGenericTypeDefinition &&
+            result = currentType.IsGenericTypeDefinition &&
                    currentType.GetGenericArguments().Length == originalType.GetGenericArguments().Length &&
                    GenericArgumentsAreInitializable(originalType)
                 ? currentType.MakeGenericType(originalType.GetGenericArguments())
@@ -139,9 +146,13 @@ internal static class AutoUnitTestGeneratorHelper
         }
         catch (ArgumentException)
         {
-            return null;
+            result = null;
         }
+        Initializes.Add((originalType, currentType), result);
+        return result;
     }
+
+    private static readonly Dictionary<(Type, Type), Type?> Initializes = new();
 
     /// <summary>
     ///     Get the full name of a type.
@@ -150,7 +161,10 @@ internal static class AutoUnitTestGeneratorHelper
     /// <returns>Full name.</returns>
     public static string GetFullName(Type type)
     {
+        if (Names.TryGetValue(type, out var v))
+            return v;
         var result = CodeFunction.GetFriendlyName(type);
+        Names.Add(type, result);
         return result;
     }
 
@@ -966,8 +980,8 @@ internal static class AutoUnitTestGeneratorHelper
         {
             var p = parameters.ElementAt(i);
             var constructorParamName = $"{paramPrefix}{IntToHex(i, 2)}";
-			declarations.Add($"\t\t\t{p.Type} {constructorParamName};");
-			declarations.Add($"\t\t\ttry {{ {constructorParamName} = {p.Value}; }} catch {{ return; }}");
+            declarations.Add($"\t\t\t{p.Type} {constructorParamName};");
+            declarations.Add($"\t\t\ttry {{ {constructorParamName} = {p.Value}; }} catch {{ return; }}");
             paramList += (!string.IsNullOrEmpty(p.Direction) ? p.Direction + " " : "") + constructorParamName;
             if (i < parameters.Count() - 1) paramList += ", ";
         }
@@ -993,20 +1007,20 @@ internal static class AutoUnitTestGeneratorHelper
     /// <returns>True if it is, and false otherwise</returns>
     private static bool IsAssemblyDebugBuild(Assembly assembly)
     {
-		var result = false;
+        var result = false;
 
-		if (AssembliesInDebug.TryGetValue(assembly, out var v))
-			return v;
+        if (AssembliesInDebug.TryGetValue(assembly, out var v))
+            return v;
 
         foreach (var attribute in assembly.GetCustomAttributes(false))
         {
             if (attribute is not DebuggableAttribute debuggableAttribute || !debuggableAttribute.IsJITTrackingEnabled)
-            	continue;
+                continue;
 
-			result = true;
-			break;
+            result = true;
+            break;
         }
-		AssembliesInDebug.Add(assembly, result);
+        AssembliesInDebug.Add(assembly, result);
         return result;
     }
 
@@ -1058,8 +1072,16 @@ internal static class AutoUnitTestGeneratorHelper
         return result.ToString();
     }
 
-	/// <summary>
-	/// List with assemblies in debug (cache)
-	/// </summary>
-	private static readonly Dictionary<Assembly, bool> AssembliesInDebug = new();
+    /// <summary>
+    /// List with assemblies in debug (cache)
+    /// </summary>
+    private static readonly Dictionary<Assembly, bool> AssembliesInDebug = new();
+    /// <summary>
+    /// Cache of implemented interfaces
+    /// </summary>
+    private static readonly Dictionary<(Type, Type), bool> ImplementsInterfaces = new();
+    /// <summary>
+    /// Types and names cache
+    /// </summary>
+    private static readonly Dictionary<Type, string> Names = new();
 }
