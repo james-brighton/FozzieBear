@@ -992,12 +992,21 @@ internal static class AutoUnitTestGeneratorHelper
     /// <returns>True if it is, and false otherwise</returns>
     private static bool IsAssemblyDebugBuild(Assembly assembly)
     {
+		var result = false;
+
+		if (AssembliesInDebug.TryGetValue(assembly, out var v))
+			return v;
+
         foreach (var attribute in assembly.GetCustomAttributes(false))
         {
-            if (attribute is DebuggableAttribute debuggableAttribute)
-                return debuggableAttribute.IsJITTrackingEnabled;
+            if (attribute is not DebuggableAttribute debuggableAttribute || !debuggableAttribute.IsJITTrackingEnabled)
+            	continue;
+
+			result = true;
+			break;
         }
-        return false;
+		AssembliesInDebug.Add(assembly, result);
+        return result;
     }
 
     /// <summary>
@@ -1047,4 +1056,9 @@ internal static class AutoUnitTestGeneratorHelper
 
         return result.ToString();
     }
+
+	/// <summary>
+	/// List with assemblies in debug (cache)
+	/// </summary>
+	private static readonly Dictionary<Assembly, bool> AssembliesInDebug = new();
 }
