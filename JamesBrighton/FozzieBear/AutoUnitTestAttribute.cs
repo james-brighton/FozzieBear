@@ -159,9 +159,38 @@ public class ReturnForAttribute : Attribute
 }
 
 /// <summary>Attribute for marking the class, method or property as not applicable for an automatic unit test.</summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
 public class SkipAttribute : Attribute
 {
+	/// <summary>
+	///     The parameters.
+	/// </summary>
+	private readonly List<string> parameters;
+	/// <summary>
+	///     Initializes a new instance of the <see cref="SkipAttribute" /> class.
+	/// </summary>
+	public SkipAttribute()
+	{
+		parameters = new List<string>();
+	}
+
+	/// <summary>
+	///     Initializes a new instance of the <see cref="SkipAttribute" /> class.
+	/// </summary>
+	/// <param name="parameters">List of parameters.</param>
+	public SkipAttribute(params string[] parameters)
+	{
+		this.parameters = new List<string>(parameters);
+	}
+
+	/// <summary>
+	///     Gets the parameters.
+	/// </summary>
+	/// <returns>The parameters.</returns>
+	public List<string> GetParameters()
+	{
+		return parameters;
+	}
 }
 
 /// <summary>Attribute for marking the method or property with a given set of parameters.</summary>
