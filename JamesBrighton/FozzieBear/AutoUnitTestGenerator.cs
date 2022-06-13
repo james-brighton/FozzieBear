@@ -86,6 +86,8 @@ public class AutoUnitTestGenerator
     /// <returns>The derived classes.</returns>
     private IReadOnlyList<Type> GetDerivedClasses(Type type, Type? skipType)
     {
+        if (DerivedClasses.TryGetValue((type, skipType), out var v))
+            return v;
         var result = new List<Type>();
 
         var realType = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
@@ -101,6 +103,7 @@ public class AutoUnitTestGenerator
                         result.Add(tt);
             }
 
+        DerivedClasses.Add(((type, skipType)), result);
         return result;
     }
 
@@ -852,4 +855,9 @@ public class AutoUnitTestGenerator
         }
         return false;
     }
+
+    /// <summary>
+    /// Derived classes cache
+    /// </summary>
+    private readonly Dictionary<(Type, Type?), IReadOnlyList<Type>> DerivedClasses = new();
 }
