@@ -966,7 +966,8 @@ internal static class AutoUnitTestGeneratorHelper
         {
             var p = parameters.ElementAt(i);
             var constructorParamName = $"{paramPrefix}{IntToHex(i, 2)}";
-            declarations.Add($"\t\t\t{p.Type} {constructorParamName} = {p.Value};");
+			declarations.Add($"\t\t\t{p.Type} {constructorParamName};");
+			declarations.Add($"\t\t\ttry {{ {constructorParamName} = {p.Value}; }} catch {{ return; }}");
             paramList += (!string.IsNullOrEmpty(p.Direction) ? p.Direction + " " : "") + constructorParamName;
             if (i < parameters.Count() - 1) paramList += ", ";
         }
