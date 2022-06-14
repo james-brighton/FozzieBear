@@ -26,7 +26,7 @@ public static class RandomGen
 	/// <returns>The random enumeration</returns>
 	public static TEnum GetEnum<TEnum>() where TEnum : struct, Enum
 	{
-		var values = Enum.GetValues<TEnum>();
+		var values = Enum.GetValues(typeof(TEnum));
 		var result = (TEnum)values.GetValue(Random.Next(values.Length))!;
 		return result;
 	}

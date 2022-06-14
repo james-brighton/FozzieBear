@@ -205,7 +205,7 @@ internal static class AutoUnitTestGeneratorHelper
             new(fullName, $"{fullName}.{last}"),
             new(fullName, $"{fullName}.{random}")
         };
-        return result.DistinctBy(x => x.Value).ToList();
+        return DistinctBy(result, x => x.Value).ToList();
     }
 
     /// <summary>
@@ -255,7 +255,7 @@ internal static class AutoUnitTestGeneratorHelper
         result.Add(new AutoUnitTestParameter(fullName, $"default({fullName})"));
         result.AddRange(StaticFields(type).Select(x => new AutoUnitTestParameter(fullName, x)));
         result.Add(new AutoUnitTestParameter(fullName, GetRandomPrimitiveValue(type)));
-        return result.DistinctBy(x => x.Value).ToList();
+        return DistinctBy(result, x => x.Value).ToList();
     }
 
     /// <summary>
@@ -275,7 +275,7 @@ internal static class AutoUnitTestGeneratorHelper
         result.Add(new AutoUnitTestParameter(fullName, "\"\\r\\n\""));
         result.Add(new AutoUnitTestParameter(fullName, $"\"{GetRandomString(16, 128)}\""));
         result.AddRange(StaticFields(type).Select(x => new AutoUnitTestParameter(fullName, x)));
-        return result.DistinctBy(x => x.Value).ToList();
+        return DistinctBy(result, x => x.Value).ToList();
     }
 
     /// <summary>
@@ -302,7 +302,7 @@ internal static class AutoUnitTestGeneratorHelper
         var index = Random.Next(0, randomPrimitiveTypeList.Count);
         result.Add(randomPrimitiveTypeList[index]);
         result.Add(new AutoUnitTestParameter(fullName, "\"\""));
-        return result.DistinctBy(x => x.Value).ToList();
+        return DistinctBy(result, x => x.Value).ToList();
     }
 
     /// <summary>
@@ -778,6 +778,31 @@ internal static class AutoUnitTestGeneratorHelper
     {
         var fields = type.GetFields(BindingFlags.Public | BindingFlags.Static).Where(x => x.FieldType == type);
         return fields.Select(x => $"{GetFullName(type)}.{x.Name}").ToList();
+    }
+
+    /// <summary>
+    /// Returns distinct elements from a sequence according to a specified key selector function and using a specified comparer to compare keys.
+    /// </summary>
+    /// <param name="source">The sequence to remove duplicate elements from.</param>
+    /// <param name="keySelector">A function to extract the key for each element.</param>
+    /// <param name="comparer">An IEqualityComparer{T} to compare keys.</param>
+    /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+    /// <typeparam name="TKey">The type of key to distinguish elements by.</typeparam>
+    /// <returns>An IEnumerable{T} that contains distinct elements from the source sequence.</returns>
+    private static IEnumerable<TSource> DistinctBy<TSource, TKey>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer = null)
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
+        return _(); IEnumerable<TSource> _()
+        {
+            var knownKeys = new HashSet<TKey>(comparer);
+            foreach (var element in source)
+            {
+                if (knownKeys.Add(keySelector(element)))
+                    yield return element;
+            }
+        }
     }
 
     /// <summary>
