@@ -108,6 +108,15 @@ internal static class AutoUnitTestGeneratorHelper
     /// <returns>True if it does and false otherwise.</returns>
     public static bool ImplementsInterface(Type type, Type interfaceType)
     {
+        if (ImplementsInterfaces.TryGetValue((type, interfaceType), out var v1))
+            return v1;
+
+        if (TypeEquals(type, interfaceType))
+        {
+            if (!ImplementsInterfaces.TryGetValue((type, interfaceType), out _))
+                ImplementsInterfaces.Add((type, interfaceType), true);
+            return true;
+        }
         var typeArgs = type.GetGenericArguments();
         if (typeArgs?.Length > 0 && interfaceType.IsGenericTypeDefinition)
         {
@@ -115,9 +124,15 @@ internal static class AutoUnitTestGeneratorHelper
             if (interfaceArgs != null && interfaceArgs.Length == typeArgs.Length)
                 interfaceType = interfaceType.MakeGenericType(typeArgs);
         }
+        if (TypeEquals(type, interfaceType))
+        {
+            if (!ImplementsInterfaces.TryGetValue((type, interfaceType), out _))
+                ImplementsInterfaces.Add((type, interfaceType), true);
+            return true;
+        }
 
-        if (ImplementsInterfaces.TryGetValue((type, interfaceType), out var v))
-            return v;
+        if (ImplementsInterfaces.TryGetValue((type, interfaceType), out var v2))
+            return v2;
 
         var interfaces = type.GetInterfaces();
         var result = interfaces.Any(t => TypeEquals(t, interfaceType));

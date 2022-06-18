@@ -64,32 +64,20 @@ public static class CodeFunction
 		return CSharpNames;
 	}
 
-	/// <summary>
-	///     Check if two given types are equal
-	/// </summary>
-	/// <param name="t1">First type.</param>
-	/// <param name="t2">Second type.</param>
-	/// <returns>True if they are equal and false otherwise.</returns>
-	public static bool TypeEquals(Type t1, Type t2)
-	{
-		if (t1.Namespace?.Equals(t2.Namespace, StringComparison.Ordinal) == false) return false;
-		if (!t1.Name.Equals(t2.Name, StringComparison.Ordinal)) return false;
-		if (t1.IsGenericType != t2.IsGenericType) return false;
+    /// <summary>
+    ///     Check if two given types are equal
+    /// </summary>
+    /// <param name="t1">First type.</param>
+    /// <param name="t2">Second type.</param>
+    /// <returns>True if they are equal and false otherwise.</returns>
+    public static bool TypeEquals(Type t1, Type t2) => t1.Equals(t2);
 
-		if (!t1.IsGenericType) return true;
-		var typeParameters1 = t1.GetGenericArguments();
-		var typeParameters2 = t2.GetGenericArguments();
-		if (typeParameters1.Length != typeParameters2.Length) return false;
-
-		return !typeParameters1.Where((t, i) => !TypeEquals(t, typeParameters2[i])).Any();
-	}
-
-	/// <summary>
-	///     Gets the name of the method.
-	/// </summary>
-	/// <param name="methodInfo">Method info.</param>
-	/// <returns>The method name or "" otherwise.</returns>
-	public static string GetFriendlyName(MethodInfo methodInfo)
+    /// <summary>
+    ///     Gets the name of the method.
+    /// </summary>
+    /// <param name="methodInfo">Method info.</param>
+    /// <returns>The method name or "" otherwise.</returns>
+    public static string GetFriendlyName(MethodInfo methodInfo)
 	{
 		var parms = methodInfo.GetParameters().Select(p => (p.IsOut ? "out " : p.ParameterType.IsByRef ? "ref " : "") + GetFriendlyName(p.ParameterType));
 		var paramNames = string.Join(", ", parms);
