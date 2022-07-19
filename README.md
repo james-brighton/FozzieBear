@@ -45,7 +45,7 @@ namespace MyNamespace;
 [AutoUnitTest]
 public class IntToStringConverter : IValueConverter
 {
-	[Return("result == null", "result is string")]
+	[Return(null, typeof(string))]
 	public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
 	{
 		if (value is not int i)

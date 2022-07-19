@@ -925,12 +925,11 @@ internal static class AutoUnitTestGeneratorHelper
         var attribute = member.GetCustomAttributes(true).FirstOrDefault(a =>
             GetFullName(a.GetType())
                 .Equals("JamesBrighton.FozzieBear.ReturnAttribute", StringComparison.Ordinal));
-        var result = attribute == null
+        var result = (attribute == null
             ? new List<string>()
-            : InvokeMethod(attribute, "GetReturns") is IEnumerable<string> list
+            : InvokeMethod(attribute, "GetReturns") is IEnumerable<object?> list
                 ? list
-                : new List<string>();
-        result = result.Select(x => "(" + x + ")");
+                : new List<object?>()).Select(x => "(" + ReturnToString(x) + ")");
         return StringsToString(result, " || ");
     }
 
@@ -952,7 +951,7 @@ internal static class AutoUnitTestGeneratorHelper
 
             var friendlyName = CodeFunction.GetFriendlyName(method);
             if (!string.Equals(friendlyName, methodName, StringComparison.Ordinal)) continue;
-            var result = InvokeMethod(attribute, "GetReturns") is IEnumerable<string> list ? list : new List<string>();
+            var result = (InvokeMethod(attribute, "GetReturns") is IEnumerable<object?> list ? list : new List<object?>()).Select(x => "(" + ReturnToString(x) + ")");
             return StringsToString(result, " || ");
         }
         return "";
@@ -1110,6 +1109,19 @@ internal static class AutoUnitTestGeneratorHelper
         }
 
         return result.ToString();
+    }
+
+    /// <summary>
+    /// Returns a given object to a result string
+    /// </summary>
+    /// <param name="o">Given object to convert</param>
+    /// <returns>The result string or an empty one otherwise</returns>
+    private static string ReturnToString(object? o)
+    {
+        if (o  == null) return "result == null";
+        if (o is string s) return s;
+        if (o is Type t) return "result is " + CodeFunction.GetFriendlyName(t);
+        return "";
     }
 
     /// <summary>

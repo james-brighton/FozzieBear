@@ -39,6 +39,7 @@ public class AutoUnitTestGenerator
     ///     Generates the tests.
     /// </summary>
     /// <returns>List with name and file content.</returns>
+    [Return(typeof(List<(string FileName, List<string> FileContent)>))]
     public IEnumerable<(string FileName, List<string> FileContent)> Execute()
     {
         var result = new List<(string FileName, List<string> FileContent)>();

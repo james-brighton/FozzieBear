@@ -78,29 +78,29 @@ public class ReturnAttribute : Attribute
 	/// <summary>
 	///     The returns.
 	/// </summary>
-	private readonly List<string> returns;
+	private readonly List<object?> returns;
 	/// <summary>
 	///     Initializes a new instance of the <see cref="ReturnAttribute" /> class.
 	/// </summary>
 	public ReturnAttribute()
 	{
-		returns = new List<string>();
+		returns = new List<object?>();
 	}
 
 	/// <summary>
 	///     Initializes a new instance of the <see cref="ReturnAttribute" /> class.
 	/// </summary>
 	/// <param name="returns">List of return statements.</param>
-	public ReturnAttribute(params string[] returns)
+	public ReturnAttribute(params object?[] returns)
 	{
-		this.returns = new List<string>(returns);
+		this.returns = new List<object?>(returns);
 	}
 
 	/// <summary>
 	///     Gets the types of the exceptions.
 	/// </summary>
 	/// <returns>The exceptions.</returns>
-	public IEnumerable<string> GetReturns()
+	public IEnumerable<object?> GetReturns()
 	{
 		return returns;
 	}
@@ -117,7 +117,7 @@ public class ReturnForAttribute : Attribute
 	/// <summary>
 	///     The returns.
 	/// </summary>
-	private readonly List<string> returns;
+	private readonly List<object?> returns;
 	/// <summary>
 	///     Initializes a new instance of the <see cref="ReturnForAttribute" /> class.
 	/// </summary>
@@ -125,7 +125,7 @@ public class ReturnForAttribute : Attribute
 	public ReturnForAttribute(string methodName)
 	{
 		this.methodName = methodName;
-		returns = new List<string>();
+		returns = new List<object?>();
 	}
 
 	/// <summary>
@@ -133,10 +133,10 @@ public class ReturnForAttribute : Attribute
 	/// </summary>
 	/// <param name="methodName">Name of the method</param>
 	/// <param name="returns">List of return statements.</param>
-	public ReturnForAttribute(string methodName, params string[] returns)
+	public ReturnForAttribute(string methodName, params object?[] returns)
 	{
 		this.methodName = methodName;
-		this.returns = new List<string>(returns);
+		this.returns = new List<object?>(returns);
 	}
 
 	/// <summary>
@@ -152,7 +152,7 @@ public class ReturnForAttribute : Attribute
 	///     Gets the types of the exceptions.
 	/// </summary>
 	/// <returns>The exceptions.</returns>
-	public IEnumerable<string> GetReturns()
+	public IEnumerable<object?> GetReturns()
 	{
 		return returns;
 	}
