@@ -198,15 +198,20 @@ public class SkipAttribute : Attribute
 public class InvokeAttribute : Attribute
 {
 	/// <summary>
-	///     The parameters.
+	///     The type parameters.
 	/// </summary>
-	private readonly List<Type> parameters;
+	private readonly List<Type> typeParameters;
+	/// <summary>
+	///     The type parameters.
+	/// </summary>
+	private readonly List<string> stringParameters;
 	/// <summary>
 	///     Initializes a new instance of the <see cref="InvokeAttribute" /> class.
 	/// </summary>
 	public InvokeAttribute()
 	{
-		parameters = new List<Type>();
+		typeParameters = new List<Type>();
+		stringParameters = new List<string>();
 	}
 
 	/// <summary>
@@ -215,15 +220,35 @@ public class InvokeAttribute : Attribute
 	/// <param name="parameters">List of parameters.</param>
 	public InvokeAttribute(params Type[] parameters)
 	{
-		this.parameters = new List<Type>(parameters);
+		typeParameters = new List<Type>(parameters);
+		stringParameters = new List<string>();
 	}
 
 	/// <summary>
-	///     Gets the parameters.
+	///     Initializes a new instance of the <see cref="InvokeAttribute" /> class.
+	/// </summary>
+	/// <param name="parameters">List of parameters.</param>
+	public InvokeAttribute(params string[] parameters)
+	{
+		typeParameters = new List<Type>();
+		stringParameters = new List<string>(parameters);
+	}
+
+	/// <summary>
+	///     Gets the type parameters.
 	/// </summary>
 	/// <returns>The parameters.</returns>
-	public List<Type> GetParameters()
+	public List<Type> GetTypeParameters()
 	{
-		return parameters;
+		return typeParameters;
+	}
+
+	/// <summary>
+	///     Gets the type parameters.
+	/// </summary>
+	/// <returns>The parameters.</returns>
+	public List<string> GetStringParameters()
+	{
+		return stringParameters;
 	}
 }

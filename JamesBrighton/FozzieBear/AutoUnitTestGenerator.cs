@@ -188,8 +188,10 @@ public class AutoUnitTestGenerator
                 result.Add(m);
                 continue;
             }
-            if (AutoUnitTestGeneratorHelper.InvokeMethod(attribute, "GetParameters") is not List<Type> parameters) return result;
+            if (AutoUnitTestGeneratorHelper.InvokeMethod(attribute, "GetTypeParameters") is not List<Type> parameters) return result;
             result.AddRange(parameters.Select(t => m.MakeGenericMethod(t)));
+            if (AutoUnitTestGeneratorHelper.InvokeMethod(attribute, "GetStringParameters") is not List<string> parameters2) return result;
+            result.AddRange(parameters2.Select(GetParameterTypes).Select(parameterTypes => m.MakeGenericMethod(parameterTypes.ToArray())));
         }
 
         return result;
