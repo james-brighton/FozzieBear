@@ -200,29 +200,29 @@ public class InvokeAttribute : Attribute
 	/// <summary>
 	///     The parameters.
 	/// </summary>
-	private readonly List<string> parameters;
+	private readonly List<Type> parameters;
 	/// <summary>
 	///     Initializes a new instance of the <see cref="InvokeAttribute" /> class.
 	/// </summary>
 	public InvokeAttribute()
 	{
-		parameters = new List<string>();
+		parameters = new List<Type>();
 	}
 
 	/// <summary>
 	///     Initializes a new instance of the <see cref="InvokeAttribute" /> class.
 	/// </summary>
 	/// <param name="parameters">List of parameters.</param>
-	public InvokeAttribute(params string[] parameters)
+	public InvokeAttribute(params Type[] parameters)
 	{
-		this.parameters = new List<string>(parameters);
+		this.parameters = new List<Type>(parameters);
 	}
 
 	/// <summary>
 	///     Gets the parameters.
 	/// </summary>
 	/// <returns>The parameters.</returns>
-	public List<string> GetParameters()
+	public List<Type> GetParameters()
 	{
 		return parameters;
 	}
