@@ -909,8 +909,10 @@ internal static class AutoUnitTestGeneratorHelper
                 .Equals("JamesBrighton.FozzieBear.ThrowsExceptionAttribute", StringComparison.Ordinal));
         if (attribute == null)
             return new List<Type>();
-        if (InvokeMethod(attribute, "GetExceptions") is List<string> result)
-            return GetExceptions(result);
+        if (InvokeMethod(attribute, "GetTypeExceptions") is List<Type> result1 && result1.Count > 0)
+            return result1;
+        if (InvokeMethod(attribute, "GetStringExceptions") is List<string> result2 && result2.Count > 0)
+            return GetExceptions(result2);
         return new List<Type>();
     }
 

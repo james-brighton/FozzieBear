@@ -40,16 +40,21 @@ public class AutoUnitTestAttribute : Attribute
 public class ThrowsExceptionAttribute : Attribute
 {
 	/// <summary>
-	///     The exceptions.
+	///     The string exceptions.
 	/// </summary>
-	private readonly List<string> exceptions;
+	private readonly List<string> stringExceptions;
+	/// <summary>
+	///     The type exceptions.
+	/// </summary>
+	private readonly List<Type> typeExceptions;
 	/// <summary>
 	///     Initializes a new instance of the <see cref="ThrowsExceptionAttribute" /> class. It adds the
 	///     <see cref="Exception" /> class to the list of exceptions.
 	/// </summary>
 	public ThrowsExceptionAttribute()
 	{
-		exceptions = new List<string> { "System.Exception" };
+		stringExceptions = new List<string>();
+		typeExceptions = new List<Type>() {typeof(Exception)};
 	}
 
 	/// <summary>
@@ -58,16 +63,36 @@ public class ThrowsExceptionAttribute : Attribute
 	/// <param name="exceptions">List of parameters.</param>
 	public ThrowsExceptionAttribute(params string[] exceptions)
 	{
-		this.exceptions = new List<string>(exceptions);
+		stringExceptions = new List<string>(exceptions);
+		typeExceptions = new List<Type>();
+	}
+
+	/// <summary>
+	///     Initializes a new instance of the <see cref="ThrowsExceptionAttribute" /> class.
+	/// </summary>
+	/// <param name="exceptions">List of parameters.</param>
+	public ThrowsExceptionAttribute(params Type[] exceptions)
+	{
+		stringExceptions = new List<string>();
+		typeExceptions = new List<Type>(exceptions);
 	}
 
 	/// <summary>
 	///     Gets the types of the exceptions.
 	/// </summary>
 	/// <returns>The exceptions.</returns>
-	public List<string> GetExceptions()
+	public List<string> GetStringExceptions()
 	{
-		return exceptions;
+		return stringExceptions;
+	}
+
+	/// <summary>
+	///     Gets the types of the exceptions.
+	/// </summary>
+	/// <returns>The exceptions.</returns>
+	public List<Type> GetTypeExceptions()
+	{
+		return typeExceptions;
 	}
 }
 
