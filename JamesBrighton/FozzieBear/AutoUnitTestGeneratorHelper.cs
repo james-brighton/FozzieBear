@@ -1123,7 +1123,14 @@ internal static class AutoUnitTestGeneratorHelper
         if (o  == null) return "result == null";
         if (o is string s) return s;
         if (o is Type t) return "result is " + CodeFunction.GetFriendlyName(t);
-        return "";
+        if (o is Enum e) return "result == " + CodeFunction.GetFriendlyName(e.GetType()) + "." + Enum.GetName(e.GetType(), e);
+
+        var m = typeof(AutoUnitTestGeneratorHelper).GetMethod(nameof(PrimitiveToString), BindingFlags.NonPublic | BindingFlags.Static);
+        if (m == null) return "";
+        m = m.MakeGenericMethod(o.GetType());
+        var r = m.Invoke(null, new[] { o });
+        if (r is not string ss) return "";
+        return "result == " + ss;
     }
 
     /// <summary>
