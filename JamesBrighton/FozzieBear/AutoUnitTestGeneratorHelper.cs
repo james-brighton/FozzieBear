@@ -207,8 +207,8 @@ internal static class AutoUnitTestGeneratorHelper
     {
         var fullName = GetFullName(type);
         var values = Enum.GetValues(type);
-        var first = Enum.GetName(type, (int)values.GetValue(0)!);
-        var last = Enum.GetName(type, (int)values.GetValue(values.Length - 1)!);
+        var first = Enum.GetName(type, values.GetValue(0)!);
+        var last = Enum.GetName(type, values.GetValue(values.Length - 1)!);
         var m = typeof(RandomGen).GetMethod(nameof(RandomGen.GetEnum), BindingFlags.Public | BindingFlags.Static);
         if (m == null) return new List<AutoUnitTestParameter>();
         m = m.MakeGenericMethod(type);
