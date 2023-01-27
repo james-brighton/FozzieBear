@@ -394,13 +394,16 @@ public class AutoUnitTestGenerator
                 returns = AutoUnitTestGeneratorHelper.GetReturnsFor(type, m);
             foreach (var paramSet in GetAllCombinations(m.GetParameters()))
             {
+                var isAwaitable = GenericTypeIs(m.ReturnType, typeof(Task<>));
                 var methodResult = m.ReturnType != typeof(void)
-                    ? AutoUnitTestGeneratorHelper.GetFullName(m.ReturnType) + " result = "
+                    ? GetFullReturnName(m.ReturnType) + " result = "
                     : "";
+                if (isAwaitable)
+                    methodResult += "await ";
                 var method = new List<string>
                 {
                     "\t\t[Test]",
-                    $"\t\tpublic void {m.Name}{AutoUnitTestGeneratorHelper.IntToHex(AutoUnitTestGeneratorHelper.GetMethodNumber(m.Name, ref counter), 4)}()",
+                    $"\t\tpublic {(isAwaitable ? "async Task " : "void ")}{m.Name}{AutoUnitTestGeneratorHelper.IntToHex(AutoUnitTestGeneratorHelper.GetMethodNumber(m.Name, ref counter), 4)}()",
                     "\t\t{"
                 };
                 if (needsInstance)
@@ -439,8 +442,8 @@ public class AutoUnitTestGenerator
                     method.AddRange(exceptionTypes.Select(e => $"\t\t\tcatch ({AutoUnitTestGeneratorHelper.GetFullName(e)}) {{}}"));
                 }
 
-                if (m.ReturnType != typeof(void) && AutoUnitTestGeneratorHelper.ImplementsInterface(m.ReturnType, typeof(IDisposable))) method.Add("\t\t\tresult?.Dispose();");
-                if (needsInstance && isDisposable) method.Add("\t\t\tinstance?.Dispose();");
+                if (m.ReturnType != typeof(void) && AutoUnitTestGeneratorHelper.ImplementsInterface(m.ReturnType, typeof(IDisposable)) && !isAwaitable) method.Add("\t\t\tresult?.Dispose();");
+                if (needsInstance && isDisposable && !isAwaitable) method.Add("\t\t\tinstance?.Dispose();");
                 method.Add("\t\t}");
                 method.Add("");
                 result.AddRange(method);
@@ -855,6 +858,30 @@ public class AutoUnitTestGenerator
                 return true;
         }
         return false;
+    }
+
+    /// <summary>
+    ///     Checks if the given concrete type is of a given generic type.
+    /// </summary>
+    /// <param name="concreteType">Given concrete type.</param>
+    /// <param name="genericType">Given generic type.</param>
+    /// <returns>True if it is and false otherwise.</returns>
+    private static bool GenericTypeIs(Type concreteType, Type genericType)
+    {
+        return concreteType.IsGenericType && concreteType.GetGenericTypeDefinition() == genericType;
+    }
+
+    /// <summary>
+    ///     Get the full name of a return type.
+    /// </summary>
+    /// <param name="type">Type.</param>
+    /// <returns>Full name.</returns>
+    private static string GetFullReturnName(Type type)
+    {
+        if (!GenericTypeIs(type, typeof(Task<>))) return AutoUnitTestGeneratorHelper.GetFullName(type);
+        var arguments = type.GetGenericArguments();
+        if (arguments.Length == 0) return "";
+        return AutoUnitTestGeneratorHelper.GetFullName(arguments[0]);
     }
 
     /// <summary>
