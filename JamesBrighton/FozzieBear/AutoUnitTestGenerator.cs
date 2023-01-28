@@ -394,8 +394,8 @@ public class AutoUnitTestGenerator
                 returns = AutoUnitTestGeneratorHelper.GetReturnsFor(type, m);
             foreach (var paramSet in GetAllCombinations(m.GetParameters()))
             {
-                var isAwaitable = GenericTypeIs(m.ReturnType, typeof(Task<>));
-                var methodResult = m.ReturnType != typeof(void)
+                var isAwaitable = m.ReturnType == typeof(Task) || GenericTypeIs(m.ReturnType, typeof(Task<>));
+                var methodResult = (m.ReturnType != typeof(void) && m.ReturnType != typeof(Task))
                     ? GetFullReturnName(m.ReturnType) + " result = "
                     : "";
                 if (isAwaitable)
@@ -878,6 +878,7 @@ public class AutoUnitTestGenerator
     /// <returns>Full name.</returns>
     private static string GetFullReturnName(Type type)
     {
+        if (type == typeof(Task)) return "void";
         if (!GenericTypeIs(type, typeof(Task<>))) return AutoUnitTestGeneratorHelper.GetFullName(type);
         var arguments = type.GetGenericArguments();
         if (arguments.Length == 0) return "";
