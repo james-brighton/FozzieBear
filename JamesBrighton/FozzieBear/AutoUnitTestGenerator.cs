@@ -436,13 +436,13 @@ public class AutoUnitTestGenerator
                 }
 
                 if (!string.IsNullOrEmpty(returns)) method.Add($"{jump}\t\t\tAssert.IsTrue({returns});");
+                if (m.ReturnType != typeof(void) && AutoUnitTestGeneratorHelper.ImplementsInterface(m.ReturnType, typeof(IDisposable)) && !isAwaitable) method.Add($"{jump}\t\t\tresult?.Dispose();");
                 if (exceptionTypes.Any())
                 {
                     method.Add("\t\t\t}");
                     method.AddRange(exceptionTypes.Select(e => $"\t\t\tcatch ({AutoUnitTestGeneratorHelper.GetFullName(e)}) {{}}"));
                 }
 
-                if (m.ReturnType != typeof(void) && AutoUnitTestGeneratorHelper.ImplementsInterface(m.ReturnType, typeof(IDisposable)) && !isAwaitable) method.Add("\t\t\tresult?.Dispose();");
                 if (needsInstance && isDisposable && !isAwaitable) method.Add("\t\t\tinstance?.Dispose();");
                 method.Add("\t\t}");
                 method.Add("");
