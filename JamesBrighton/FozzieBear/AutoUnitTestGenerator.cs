@@ -558,7 +558,7 @@ public class AutoUnitTestGenerator
         foreach (var prop in properties)
         {
             var exceptionTypes = AutoUnitTestGeneratorHelper.GetExceptions(prop);
-            foreach (var propertySet in GetTypeVariations(null, prop.PropertyType))
+            foreach (var propertySet in GetTypeVariations(null, prop.PropertyType, 0))
                 foreach (var indexerSet in GetAllIndexCombinations(prop))
                 {
                     var method = AutoUnitTestGeneratorHelper.GenerateMethodDeclaration(prop, ref counter, needsInstance, fullName, constructorParamDeclarations, constructorParamList);
@@ -602,7 +602,7 @@ public class AutoUnitTestGenerator
         var fullName = AutoUnitTestGeneratorHelper.GetFullName(type);
         var result = new List<AutoUnitTestParameter>
         {
-            new(fullName, $"new {GetConstructor(type)}")
+            new(fullName, $"new {GetConstructor(type, 0)}")
         };
         return result;
     }
@@ -612,18 +612,22 @@ public class AutoUnitTestGenerator
     /// </summary>
     /// <param name="enclosingConstructor">Type for calls this method in its constructor. Null means 'doesn't matter'.</param>
     /// <param name="type">Type.</param>
+    /// <param name="level">Level of the call. Used to stop endless recursion.</param>
     /// <param name="isNullable">Type is nullable (true) or not (false)</param>
     /// <returns>The combinations.</returns>
-    private List<AutoUnitTestParameter> GetInterfaceParams(Type? enclosingConstructor, Type type, bool isNullable)
+    private List<AutoUnitTestParameter> GetInterfaceParams(Type? enclosingConstructor, Type type, int level, bool isNullable)
     {
-        var fullName = AutoUnitTestGeneratorHelper.GetFullName(type);
         var result = new List<AutoUnitTestParameter>();
+        // Endless recursion detection
+        if (level >= 4)
+            return result;
+        var fullName = AutoUnitTestGeneratorHelper.GetFullName(type);
 
         if (isNullable)
             result.Add(new AutoUnitTestParameter(fullName, $"({fullName})null"));
         var list = new List<AutoUnitTestParameter>();
         list.AddRange(from @class in GetDerivedClasses(type, enclosingConstructor)
-                      select GetConstructor(@class)
+                      select GetConstructor(@class, level + 1)
             into c
                       where !string.IsNullOrEmpty(c)
                       select new AutoUnitTestParameter(fullName, $"new {c}"));
@@ -671,7 +675,7 @@ public class AutoUnitTestGenerator
 
         if (isNullable)
             result.Add(new AutoUnitTestParameter(fullName, $"({fullName})null"));
-        var c = GetConstructor(type);
+        var c = GetConstructor(type, 0);
         if (string.IsNullOrEmpty(c)) return result;
         result.Add(new AutoUnitTestParameter(fullName, $"new {c}"));
         return result;
@@ -681,8 +685,9 @@ public class AutoUnitTestGenerator
     ///     Gets the constructor as a C# code declaration for the given type.
     /// </summary>
     /// <param name="type">Type.</param>
+    /// <param name="level">Level of the call.</param>
     /// <returns>The constructor or an empty string if not found.</returns>
-    private string GetConstructor(Type type)
+    private string GetConstructor(Type type, int level)
     {
         var fullName = AutoUnitTestGeneratorHelper.GetFullName(type);
 
@@ -716,7 +721,7 @@ public class AutoUnitTestGenerator
         for (var i = 0; i < pars.Length; i++)
         {
             var param = pars[i];
-            var vars = GetParameterVariations(type, param);
+            var vars = GetParameterVariations(type, level, param);
             if (vars.Count == 0) return "";
 
             list += vars[0].Value;
@@ -740,7 +745,7 @@ public class AutoUnitTestGenerator
         var param = property.SetMethod.GetParameters()[0];
         var type = param.ParameterType;
         var isNullable = ParameterInfoFunction.IsNullable(param);
-        var result = GetTypeVariations(null, type, isNullable);
+        var result = GetTypeVariations(null, type, 0, isNullable);
         foreach (var r in result)
             r.Value = $"[{r.Value}]";
         return result;
@@ -760,7 +765,7 @@ public class AutoUnitTestGenerator
         var param = property.GetMethod.GetParameters()[0];
         var type = param.ParameterType;
         var isNullable = ParameterInfoFunction.IsNullable(param);
-        var result = GetTypeVariations(null, type, isNullable);
+        var result = GetTypeVariations(null, type, 0, isNullable);
         foreach (var r in result)
             r.Value = $"[{r.Value}]";
         return result;
@@ -776,7 +781,7 @@ public class AutoUnitTestGenerator
         var cases = new List<IEnumerable<AutoUnitTestParameter>>();
         foreach (var parameter in parameters)
         {
-            var vars = GetParameterVariations(null, parameter);
+            var vars = GetParameterVariations(null, 0, parameter);
             cases.Add(vars);
         }
         return AutoUnitTestGeneratorHelper.Cartesian(cases);
@@ -786,12 +791,13 @@ public class AutoUnitTestGenerator
     ///     Gets parameter variations for a given parameter
     /// </summary>
     /// <param name="enclosingConstructor">Type for calls this method in its constructor. Null means 'doesn't matter'.</param>
+    /// <param name="level">Level of the call.</param>
     /// <param name="param">Given parameter.</param>
     /// <returns>All variations.</returns>
-    private List<AutoUnitTestParameter> GetParameterVariations(Type? enclosingConstructor, ParameterInfo param)
+    private List<AutoUnitTestParameter> GetParameterVariations(Type? enclosingConstructor, int level, ParameterInfo param)
     {
         var isNullable = ParameterInfoFunction.IsNullable(param);
-        var typeVariations = GetTypeVariations(enclosingConstructor, param.ParameterType, isNullable);
+        var typeVariations = GetTypeVariations(enclosingConstructor, param.ParameterType, level, isNullable);
         foreach (var p in typeVariations)
             if (param.IsOut)
                 p.Direction = "out";
@@ -813,9 +819,10 @@ public class AutoUnitTestGenerator
     /// </summary>
     /// <param name="enclosingConstructor">Type for calls this method in its constructor. Null means 'doesn't matter'.</param>
     /// <param name="type">Given type.</param>
+    /// <param name="level">Level of the call.</param>
     /// <param name="isNullable">Type is nullable (true) or not (false)</param>
     /// <returns>All variations.</returns>
-    private List<AutoUnitTestParameter> GetTypeVariations(Type? enclosingConstructor, Type type, bool isNullable = true)
+    private List<AutoUnitTestParameter> GetTypeVariations(Type? enclosingConstructor, Type type, int level, bool isNullable = true)
     {
         var coreType = AutoUnitTestGeneratorHelper.GetCoreType(type);
         List<AutoUnitTestParameter> result = new();
@@ -838,7 +845,7 @@ public class AutoUnitTestGenerator
         else if (type.IsArray)
             result = GetArrayParams(type, isNullable);
         else if (type.IsInterface || type.IsAbstract)
-            result = GetInterfaceParams(enclosingConstructor, type, isNullable);
+            result = GetInterfaceParams(enclosingConstructor, type, level, isNullable);
         else if (type.IsClass && !type.IsAbstract) result = GetClassParams(type, isNullable);
 
         return result;
