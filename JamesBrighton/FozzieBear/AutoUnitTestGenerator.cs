@@ -403,7 +403,7 @@ public class AutoUnitTestGenerator
                 var method = new List<string>
                 {
                     "\t\t[Test]",
-                    $"\t\tpublic {(isAwaitable ? "async Task " : "void ")}{m.Name}{AutoUnitTestGeneratorHelper.IntToHex(AutoUnitTestGeneratorHelper.GetMethodNumber(m.Name, ref counter), 4)}()",
+                    $"\t\tpublic {(isAwaitable ? "async System.Threading.Tasks.Task " : "void ")}{m.Name}{AutoUnitTestGeneratorHelper.IntToHex(AutoUnitTestGeneratorHelper.GetMethodNumber(m.Name, ref counter), 4)}()",
                     "\t\t{"
                 };
                 if (needsInstance)
