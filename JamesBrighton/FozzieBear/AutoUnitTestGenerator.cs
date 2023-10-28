@@ -712,6 +712,12 @@ public class AutoUnitTestGenerator
             return $"{fullName}(\"{param}\")";
         }
 
+        if (IsStruct(type))
+        {
+            // A struct always has a parameterless constructor
+            return $"{fullName}()";
+        }
+
         var constructors = type.GetConstructors().Where(x => !x.GetParameters().Any(y => y.ParameterType.IsPointer))
             .OrderBy(x => x.GetParameters().Length);
         if (!constructors.Any()) return "";
@@ -891,6 +897,16 @@ public class AutoUnitTestGenerator
         if (arguments.Length == 0) return "";
         return AutoUnitTestGeneratorHelper.GetFullName(arguments[0]);
     }
+
+	/// <summary>
+	///     Checks if a type is a struct
+	/// </summary>
+	/// <param name="type">Type.</param>
+	/// <returns>True if it is and false otherwise.</returns>
+	private static bool IsStruct(Type type)
+	{
+		return type?.IsValueType == true && !type.IsEnum && !type.IsPrimitive;
+	}
 
     /// <summary>
     /// Derived classes cache

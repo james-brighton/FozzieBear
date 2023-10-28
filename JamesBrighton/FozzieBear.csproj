@@ -2,6 +2,7 @@
 	<PropertyGroup>
         <Authors>James Brighton</Authors>
         <Company>James Brighton</Company>
+        <Description>FozzieBear is a unit test generator for NUnit.</Description>
 		<ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
@@ -10,7 +11,7 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <RepositoryUrl>https://github.com/james-brighton/FozzieBear</RepositoryUrl>
         <TargetFramework>netstandard2.1</TargetFramework>
-        <Version>1.0.17</Version>
+        <Version>1.0.18</Version>
 	</PropertyGroup>
     <ItemGroup>
         <None Remove=".gitignore" />
