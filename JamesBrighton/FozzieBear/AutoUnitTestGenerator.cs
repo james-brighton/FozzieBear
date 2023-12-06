@@ -435,7 +435,7 @@ public class AutoUnitTestGenerator
                         method.Add($"\t\t\tglobal::System.Console.WriteLine(\"{fullName}.{m.Name}\\t\" + (result?.ToString() ?? \"null\"));");
                 }
 
-                if (!string.IsNullOrEmpty(returns)) method.Add($"{jump}\t\t\tAssert.IsTrue({returns});");
+                if (!string.IsNullOrEmpty(returns)) method.Add($"{jump}\t\t\tAssert.That({returns}, Is.True);");
                 if (m.ReturnType != typeof(void) && AutoUnitTestGeneratorHelper.ImplementsInterface(m.ReturnType, typeof(IDisposable)) && !isAwaitable) method.Add($"{jump}\t\t\tresult?.Dispose();");
                 if (exceptionTypes.Any())
                 {
