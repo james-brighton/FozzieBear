@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/WockaWocka/bin/Debug/net6.0/WockaWocka.dll",
+            "program": "${workspaceFolder}/WockaWocka/bin/Debug/net8.0/WockaWocka.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",

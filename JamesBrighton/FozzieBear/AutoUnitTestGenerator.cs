@@ -53,7 +53,7 @@ public class AutoUnitTestGenerator
         foreach (var assembly in assemblies)
         {
             var types = assembly.GetTypes().Where(t =>
-                    t.IsClass || !t.IsInterface || !t.IsAbstract || !t.IsEnum || !t.IsValueType || !t.IsValueType)
+                    t.IsClass && !t.IsInterface && !t.IsAbstract && !t.IsEnum && !t.IsValueType && !t.IsValueType && !AutoUnitTestGeneratorHelper.SkipClass(t))
                 .OrderBy(t => t.Name).ToList();
             foreach (var t in types)
             {
